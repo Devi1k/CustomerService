@@ -9,12 +9,10 @@ from multiprocessing import Pipe, Process
 
 import gensim
 from django.http import JsonResponse
-from django.shortcuts import render
 
 # Create your views here.
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
-from dwebsocket import require_websocket
 
 from .conf.config import get_config
 from .gov.agent_rule import AgentRule
