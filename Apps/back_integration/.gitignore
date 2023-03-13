@@ -1,0 +1,13 @@
+/data/goal_set*
+/data/wb.text.*
+/data/words.vector.gz
+/log
+
+.DS_Store
+gov/.DS_Store
+__pycache__/*
+conf/__pycache__/*
+gov/__pycache__/*
+utils/__pycache__/*
+utils/test/__pycache__/*
+normal/__pycache__/*

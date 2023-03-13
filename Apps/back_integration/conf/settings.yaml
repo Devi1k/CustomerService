@@ -1,0 +1,15 @@
+epoch_size: 50
+warm_start: 1
+warm_start_epoch_number: 20
+train_mode: 0
+allow_wrong_service: 0
+max_turn: 4
+saved_model: model/origin.pkl
+input_size_dqn: 1222
+hidden_size_dqn: 300
+experience_replay_pool_size: 20000
+epsilon: 0.1
+gamma: 1.0
+dqn_learning_rate: 0.001
+save_performance: 0
+performance_save_path: /home/yanking/disk1/nizepu/govChatbot/model/dqn/learning_rate

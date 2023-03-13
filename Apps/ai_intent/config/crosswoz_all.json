@@ -1,0 +1,26 @@
+{
+    "data_dir": "processed_data",
+    "output_dir": "output",
+    "model_dir": "model",
+    "zipped_model_path": "output/bert_crosswoz.zip",
+    "log_dir": "log",
+    "DEVICE": "cpu",
+    "seed": 2019,
+    "cut_sen_len": 60,
+    "use_bert_tokenizer": false,
+    "model": {
+        "finetune": true,
+        "context": false,
+        "context_grad": false,
+        "pretrained_weights": "hfl/chinese-bert-wwm-ext",
+        "check_step": 100,
+        "max_step": 1000,
+        "batch_size": 20,
+        "learning_rate": 3e-6,
+        "adam_epsilon": 1e-8,
+        "warmup_steps": 0,
+        "weight_decay": 0.0,
+        "dropout": 0.1,
+        "hidden_units": 768
+    }
+}
