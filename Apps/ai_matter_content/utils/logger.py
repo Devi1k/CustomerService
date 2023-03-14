@@ -22,6 +22,7 @@ class Logger:
         self.log.addHandler(self.log_file_handler)
         return self.log
 
+
 def clean_log():
     path = os.getcwd() + '/Apps/ai_matter_content/log/'
     for i in os.listdir(path):
