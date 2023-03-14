@@ -1,5 +1,5 @@
 {
-  "data_dir": "processed_mydata_base",
+  "data_dir": "model",
   "output_dir": "output_bert",
   "model_dir": "model",
   "zipped_model_path": "output_bert/bert_crosswoz_base.zip",

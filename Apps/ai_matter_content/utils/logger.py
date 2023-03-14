@@ -26,7 +26,7 @@ class Logger:
 def clean_log():
     path = os.getcwd() + '/Apps/ai_matter_content/log/'
     for i in os.listdir(path):
-        if len(i) < 7:
+        if len(i) < 16:
             continue
         file_path = path + i  # 生成日志文件的路径
         timestamp = strftime("%Y%m%d%H%M%S", gmtime())

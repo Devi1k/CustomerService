@@ -13,16 +13,17 @@ from transformers import BertTokenizer
 from Apps.ai_matter_content.dataloader import Dataloader
 from Apps.ai_matter_content.utils.logger import Logger, clean_log
 
-config = json.load(open("model/crosswoz_all_base.json"))
+config = json.load(open(os.getcwd() + "/Apps/ai_matter_content/model/crosswoz_all_base.json"))
 DEVICE = config['DEVICE']
 data_dir = config['data_dir']
-tokenizer = BertTokenizer.from_pretrained("hfl/chinese-bert-wwm-ext")
-intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json')))
+tokenizer = BertTokenizer.from_pretrained(config['model']['pretrained_weights'])
+intent_vocab = json.load(open(os.getcwd() + "/Apps/ai_matter_content/model/intent_vocab.json"))
 
-log = Logger('intent').getLogger()
+log = Logger('matter_content').getLogger()
 dataloader = Dataloader(intent_vocab=intent_vocab,
                             pretrained_weights=config['model']['pretrained_weights'])
-sess = ort.InferenceSession('matter_content.onnx', providers=['CUDAExecutionProvider'])
+
+sess = ort.InferenceSession(os.getcwd() + "/Apps/ai_matter_content/model/matter_content.onnx", providers=['CUDAExecutionProvider'])
 
 def to_numpy(tensor):
     return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
