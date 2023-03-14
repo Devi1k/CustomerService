@@ -1,0 +1,6 @@
+/model/*.onnx
+/model/*.bin
+
+utils/.DS_Store
+__pycache__/*
+utils/__pycache__/*

@@ -42,15 +42,6 @@ class BERTNLU(NLU):
         log.info('intent num:{}'.format(len(intent_vocab)))
 
         best_model_path = os.path.join(output_dir, 'pytorch_model.bin')
-        # if not os.path.exists(best_model_path):
-        #     if not os.path.exists(output_dir):
-        #         os.makedirs(output_dir)
-        #     print('Load from model_file param')
-        #     # archive_file = cached_path(model_file)
-        #     archive_file = os.path.join(output_dir, model_file)
-        #     archive = zipfile.ZipFile(archive_file, 'r')
-        #     archive.extractall(root_dir)
-        #     archive.close()
         log.info('Load from:{}'.format( best_model_path))
         model = JointBERT(config['model'], DEVICE, dataloader.intent_dim)
         model.load_state_dict(torch.load(os.path.join(output_dir, 'pytorch_model.bin'), DEVICE))
