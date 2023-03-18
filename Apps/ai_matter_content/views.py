@@ -1,5 +1,6 @@
 import json
 import os
+import time
 
 import numpy as np
 from django.http import JsonResponse
@@ -21,12 +22,15 @@ intent_vocab = json.load(open(os.getcwd() + "/Apps/ai_matter_content/model/inten
 
 log = Logger('matter_content').getLogger()
 dataloader = Dataloader(intent_vocab=intent_vocab,
-                            pretrained_weights=config['model']['pretrained_weights'])
+                        pretrained_weights=config['model']['pretrained_weights'])
 
-sess = ort.InferenceSession(os.getcwd() + "/Apps/ai_matter_content/model/matter_content.onnx", providers=['CUDAExecutionProvider'])
+sess = ort.InferenceSession(os.getcwd() + "/Apps/ai_matter_content/model/matter_content.onnx",
+                            providers=['CUDAExecutionProvider'])
+
 
 def to_numpy(tensor):
     return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+
 
 def build_predict_text(text):
     tokens = tokenizer.tokenize(text)
@@ -37,7 +41,7 @@ def build_predict_text(text):
     indexed_tokens = tokenizer.convert_tokens_to_ids(words)
     word_seq_tensor[0, : len(words)] = torch.LongTensor(indexed_tokens)
     word_mask_tensor[0, : len(words)] = torch.LongTensor([1] * len(words))
-    return word_seq_tensor,word_mask_tensor
+    return word_seq_tensor, word_mask_tensor
 
 
 def infer_onnx(sess, utterance):
@@ -51,6 +55,14 @@ def infer_onnx(sess, utterance):
     outs = sess.run([out_name], input)
     num = np.argmax(outs)
     return dataloader.id2intent[num]
+
+
+warm_start_text = "我想办理公共卫生许可"
+warm_start_time = time.time()
+intent = infer_onnx(sess, warm_start_text)
+log.info('warm start text:{},intent:{},cost time:{}'.format(warm_start_text, intent,str(time.time() - warm_start_time)))
+
+
 
 @csrf_exempt
 def identify(request):

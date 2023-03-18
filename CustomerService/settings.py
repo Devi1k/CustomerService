@@ -40,7 +40,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'Apps.back_integration.apps.BackIntegrationConfig',
     'Apps.ai_intent.apps.AiIntentConfig',
-    'Apps.ai_matter_content.apps.AiMatterContentConfig'
+    # 'Apps.ai_matter_content.apps.AiMatterContentConfig'
 ]
 
 MIDDLEWARE = [

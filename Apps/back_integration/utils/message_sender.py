@@ -23,4 +23,5 @@ def messageSender(conv_id, log, msg="", options=None, link="", service_name="", 
     except ConnectionError:
         r = requests.post("https://asueeer.com/api/im/send_message?mock_login=123", data=response_json,
                           headers=headers)
+    print(r)
     log.info(response['content'])

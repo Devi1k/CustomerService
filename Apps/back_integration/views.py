@@ -54,6 +54,7 @@ def chat(request):
     result = ResultGenerator()
     if request.method == "GET":
         response = request.body.decode("utf-8")
+        # log.info(response)
         try:
             response = json.loads(response)
         except JSONDecodeError:
@@ -87,8 +88,6 @@ def process_msg(user_json):
                                                  log=log,
                                                  link=link)
                 pipes_dict[conv_id] = dialogue_content
-                # 错误处理
-                # todo: 处理跳过
                 return
             elif service_name == '以上都不是' and dialogue_content[9] > 1:
                 dialogue_content[4] = True
@@ -103,7 +102,6 @@ def process_msg(user_json):
                     os.kill(dialogue_content[3], signal.SIGKILL)
                 log.info('process kill')
                 pipes_dict[conv_id] = dialogue_content
-                # todo: 处理跳过
                 return
             elif service_name != '以上都不是' and dialogue_content[9] == 0:
                 dialogue_content[2] = service_name.replace("--", "-")
@@ -129,7 +127,6 @@ def process_msg(user_json):
                 dialogue_content[2] = ""
                 dialogue_content[9] = 0
                 pipes_dict[conv_id] = dialogue_content
-                # todo: 处理跳过
                 return
     except KeyError:
         pass
@@ -149,7 +146,6 @@ def process_msg(user_json):
                     messageSender(conv_id=conv_id, msg="大家都在问", options=dialogue_content[8], log=log)
                 else:
                     messageSender(conv_id=conv_id, msg=dialogue_content[8], log=log)
-                # todo: 处理跳过
                 return
             multi = True
             if dialogue_content[2] == "":
@@ -173,10 +169,9 @@ def process_msg(user_json):
                                                     log)
                     dialogue_content[6] = True
                     pipes_dict[conv_id] = dialogue_content
-                    # todo: 处理跳过
                     return
-            # Determine whether it is a multi-round conversation
-            multi, similarity = is_multi_round(dialogue_content[2], dialogue_content[7])
+                # Determine whether it is a multi-round conversation
+                multi, similarity = is_multi_round(dialogue_content[2], dialogue_content[7])
             if multi:
                 log.info("Same matter.")
                 # user_pipe[0].close()
@@ -216,10 +211,11 @@ def process_msg(user_json):
                                 conv_id))
                 # send_pipe, receive_pipe, first_utterance, process, single_finish, all_finish, first_utt,
                 # service_name, last_msg
-                pipes_dict[conv_id] = [user_pipe, response_pipe, pipes_dict[conv_id][2], 0, False, False,
-                                       True,
-                                       "", "", 0, []]
-                dialogue_content = pipes_dict[conv_id]
+                # pipes_dict[conv_id] = [user_pipe, response_pipe, pipes_dict[conv_id][2], 0, False, False,
+                #                        True,
+                #                        "", "", 0, []]
+                # dialogue_content = pipes_dict[conv_id]
+                dialogue_content[0], dialogue_content[1] = user_pipe, response_pipe
                 dialogue_content[2] = re.sub("[\s++\.\!\/_,$%^*(+\"\')]+|[+——()?【】“”！，。？、~@#￥%……&*]+",
                                              "",
                                              dialogue_content[2].replace("--", "-"))
@@ -282,11 +278,11 @@ def process_msg(user_json):
                                     if inform_slots[i] in stop_words:
                                         del inform_slots[i]
                                 p.start()
-
+                                dialogue_content[3] = p.ident
                                 user_pipe[0].send(inform_slots)
                             except OSError:
                                 # messageSender(conv_id=conv_id, msg="会话结束", log=log, end=True)
-                                pass
+                                return
                             if user_text['text'] != dialogue_content[2]:
                                 dialogue_content[2] += user_text['text']
                             recv = response_pipe[1].recv()
@@ -307,6 +303,7 @@ def process_msg(user_json):
                             else:
                                 dialogue_content[4] = True
                                 dialogue_content[6] = True
+                                dialogue_content[3] = 0
                                 user_pipe[0].close()
                                 response_pipe[1].close()
                                 service_name = recv['service']
@@ -352,7 +349,6 @@ def process_msg(user_json):
                     messageSender(conv_id=conv_id, msg="大家都在问", options=dialogue_content[8], log=log)
                 else:
                     messageSender(conv_id=conv_id, msg=dialogue_content[8], log=log)
-                # todo: 处理跳过
                 return
             if dialogue_content[2] == "":
                 dialogue_content[2] = msg['content']['text']
@@ -399,7 +395,6 @@ def process_msg(user_json):
                                                          log=log,
                                                          link=link)
                         pipes_dict[conv_id] = dialogue_content
-                        # todo: 处理跳过
                         return
                 if dialogue_content[6] and len(options) > 0:
                     dialogue_content[6] = False
@@ -424,12 +419,14 @@ def process_msg(user_json):
                                     del inform_slots[i]
                         else:
                             inform_slots = sentence
-                        p = Process(target=simulation_epoch,
-                                    args=(
-                                        (user_pipe[1], response_pipe[0]), agent, parameter, log, similarity_dict,
-                                        conv_id))
-                        p.start()
-                        dialogue_content[3] = p.ident
+                        if dialogue_content[3] == 0:
+                            p = Process(target=simulation_epoch,
+                                        args=(
+                                            (user_pipe[1], response_pipe[0]), agent, parameter, log,
+                                            similarity_dict,
+                                            conv_id))
+                            p.start()
+                            dialogue_content[3] = p.ident
                         # 发给子进程诊断
                         user_pipe[0].send(inform_slots)
                     except OSError:
@@ -478,6 +475,7 @@ def process_msg(user_json):
                     else:
                         dialogue_content[4] = True
                         dialogue_content[6] = True
+                        dialogue_content[3] = 0
                         # user_pipe[0].close()
                         # response_pipe[1].close()
                         service_name = recv['service']

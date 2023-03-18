@@ -42,7 +42,8 @@ class User(object):
             "agent_aciton": {}
         }
         self.goal_set = goal
-        self.goal_set_path = os.path.join('./data', 'goal_set_{}.json'.format(self.conv_id))
+        self.goal_set_path = os.path.join(os.getcwd(), 'Apps/back_integration/data',
+                                          'goal_set_{}.json'.format(self.conv_id))
         with open(self.goal_set_path, 'w') as f:
             json.dump(goal, f)
         self.goal = self.goal_set["goal"]

@@ -75,7 +75,7 @@ def get_answer(first_utterance, service_name, log, intent_class=''):
     try:
         # --intention detection
         if intent_class == '':
-            intent_path = "https://miner.picp.net/intent?text={}"
+            intent_path = "https://miner.picp.net/chatBot/intent?text={}"
             intent_res = requests.get(intent_path.format(first_utterance), verify=False).json()
             intent_class = intent_res['data']
             if '认定高中教师资格的学历要求' in first_utterance:
@@ -148,7 +148,7 @@ def faq_diagnose(answer, dialogue_content, conv_id, log, service_name=""):
 
 
 def get_faq_from_service(first_utterance, service, history):
-    from utils.word_match import cut_sentence_remove_stopwords
+    from .word_match import cut_sentence_remove_stopwords
     if service in syn_service.keys():
         syn_list = syn_service[service]
         for s in syn_list:
@@ -203,6 +203,7 @@ def get_faq_from_service(first_utterance, service, history):
 def return_answer(dialogue_content, conv_id, service_name, log, link, intent_class=''):
     similarity_score, answer, service = get_faq_from_service(first_utterance=dialogue_content[2],
                                                              service=service_name, history=dialogue_content[10])
+    log.info(answer)
     if float(similarity_score) < 0.32:
         answer = get_answer(dialogue_content[2], service_name, log, intent_class)
     try:
@@ -218,12 +219,13 @@ def return_answer(dialogue_content, conv_id, service_name, log, link, intent_cla
     # pipes_dict[conv_id][3].kill()
     if dialogue_content[3] != 0:
         os.kill(dialogue_content[3], signal.SIGKILL)
-    # log.info('process kill')
+    log.info('process kill')
     recommend = get_recommend(service_name=dialogue_content[7],
                               history=dialogue_content[10])
     if len(recommend) < 1:
         recommend = "请问还有其他问题吗，如果有请继续提问"
     dialogue_content[8] = recommend
+    log.info('provide recommend')
     if isinstance(recommend, list):
         messageSender(conv_id=conv_id, msg="大家都在问", log=log, end=True,
                       service_name=service_name, options=dialogue_content[8])

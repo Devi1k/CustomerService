@@ -8,6 +8,8 @@ from time import strftime, gmtime
 
 class Logger:
     def __init__(self, name):
+        logging.basicConfig(level=logging.INFO,
+                            format='%(asctime)s - File \"%(name)s/%(filename)s\" - line %(lineno)s - %(levelname)s - %(message)s')
         self.log_path = os.getcwd() + '/Apps/back_integration/log/diagnose'
         self.log_fmt = '%(asctime)s - File \"%(name)s/%(filename)s\" - line %(lineno)s - %(levelname)s - %(message)s'
         self.formatter = logging.Formatter(self.log_fmt)
