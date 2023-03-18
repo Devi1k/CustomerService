@@ -143,7 +143,7 @@ def process_msg(user_json):
             dialogue_content = pipes_dict[conv_id]
             if 'content' not in msg.keys():
                 if isinstance(dialogue_content[8], list):
-                    messageSender(conv_id=conv_id, msg="大家都在问", options=dialogue_content[8], log=log)
+                    messageSender(conv_id=conv_id,options=dialogue_content[8], log=log)
                 else:
                     messageSender(conv_id=conv_id, msg=dialogue_content[8], log=log)
                 return
@@ -263,6 +263,7 @@ def process_msg(user_json):
                         if dialogue_content[6] and len(options) > 0:
                             dialogue_content[6] = False
                             dialogue_content[9] += 1
+                            dialogue_content[8] = options
                             messageSender(conv_id=conv_id, log=log, options=options, end=False)
                             pipes_dict[conv_id] = dialogue_content
                         else:
@@ -346,7 +347,7 @@ def process_msg(user_json):
             user_pipe, response_pipe = dialogue_content[0], dialogue_content[1]
             if 'content' not in msg.keys():
                 if isinstance(dialogue_content[8], list):
-                    messageSender(conv_id=conv_id, msg="大家都在问", options=dialogue_content[8], log=log)
+                    messageSender(conv_id=conv_id, options=dialogue_content[8], log=log)
                 else:
                     messageSender(conv_id=conv_id, msg=dialogue_content[8], log=log)
                 return
@@ -399,6 +400,7 @@ def process_msg(user_json):
                 if dialogue_content[6] and len(options) > 0:
                     dialogue_content[6] = False
                     dialogue_content[9] += 1
+                    dialogue_content[8] = options
                     pipes_dict[conv_id] = dialogue_content
                     messageSender(conv_id=conv_id, log=log, options=options, end=False)
                 else:
