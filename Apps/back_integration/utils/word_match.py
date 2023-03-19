@@ -4,7 +4,7 @@ import time
 
 # import jieba.analyse
 import numpy as np
-from thulac import thulac
+import pkuseg
 
 from ..utils.ai_wrapper import get_related_title
 
@@ -189,15 +189,17 @@ def is_multi_round(utterance, service_name):
 
 
 def cut_sentence_remove_stopwords(sentence):
-    thu = thulac(
-        user_dict=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data/new_dict.txt'),
-        seg_only=True)
+    # thu = thulac(
+    #     user_dict=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data/new_dict.txt'),
+    #     seg_only=True)
+    pku = pkuseg.pkuseg(user_dict=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data/new_dict.txt'))
     stop_words = [i.strip() for i in open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                                                        'data/baidu_stopwords.txt')).readlines()]
-    seg = thu.cut(sentence)
+    # seg = thu.cut(sentence)
+    seg = pku.cut(sentence)
     seg_list = []
     for s in seg:
-        seg_list.append(s[0])
+        seg_list.append(s)
     for i in range(len(seg_list) - 1, -1, -1):
         if seg_list[i] in stop_words:
             del seg_list[i]

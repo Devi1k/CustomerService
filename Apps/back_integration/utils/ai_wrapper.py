@@ -59,6 +59,8 @@ def get_nli(first_utterance, service_name):
 
 # 进入对话后的检索事项
 def get_related_title(first_utterance):
+    from ..utils.word_match import cut_sentence_remove_stopwords
+    first_utterance = ''.join(cut_sentence_remove_stopwords(first_utterance))
     title_path = "https://burninghell.xicp.net/getRelatedTitle/ver2?query={}"
     # title_res = []
     try:
@@ -203,9 +205,9 @@ def get_faq_from_service(first_utterance, service, history):
 def return_answer(dialogue_content, conv_id, service_name, log, link, intent_class=''):
     similarity_score, answer, service = get_faq_from_service(first_utterance=dialogue_content[2],
                                                              service=service_name, history=dialogue_content[10])
-    log.info(answer)
-    if float(similarity_score) < 0.32:
-        answer = get_answer(dialogue_content[2], service_name, log, intent_class)
+    if float(similarity_score) < 0.34:
+        answer = get_answer(first_utterance=dialogue_content[2], service_name=dialogue_content[7], log=log,
+                            intent_class=intent_class)
     try:
         service_link = str(link[service_name])
     except KeyError:
@@ -219,7 +221,7 @@ def return_answer(dialogue_content, conv_id, service_name, log, link, intent_cla
     # pipes_dict[conv_id][3].kill()
     if dialogue_content[3] != 0:
         os.kill(dialogue_content[3], signal.SIGKILL)
-    log.info('process kill')
+        log.info('process kill')
     recommend = get_recommend(service_name=dialogue_content[7],
                               history=dialogue_content[10])
     if len(recommend) < 1:

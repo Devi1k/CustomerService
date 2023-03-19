@@ -82,9 +82,9 @@ def process_msg(user_json):
             service_name = msg['content']['service_name']
             dialogue_content = pipes_dict[conv_id]
             if service_name != "以上都不是" and dialogue_content[9] != 0:
-                dialogue_content[7] = service_name
+                dialogue_content[7] = service_name.replace("--", "-")
                 dialogue_content = return_answer(dialogue_content=dialogue_content, conv_id=conv_id,
-                                                 service_name=service_name,
+                                                 service_name=dialogue_content[7],
                                                  log=log,
                                                  link=link)
                 pipes_dict[conv_id] = dialogue_content
@@ -141,9 +141,10 @@ def process_msg(user_json):
         elif conv_id in pipes_dict and pipes_dict[conv_id][5] is False and pipes_dict[conv_id][4] is True:
             log.info("continue to ask")
             dialogue_content = pipes_dict[conv_id]
+            # todo: wait to update new front end, delete this
             if 'content' not in msg.keys():
                 if isinstance(dialogue_content[8], list):
-                    messageSender(conv_id=conv_id,options=dialogue_content[8], log=log)
+                    messageSender(conv_id=conv_id, options=dialogue_content[8], log=log)
                 else:
                     messageSender(conv_id=conv_id, msg=dialogue_content[8], log=log)
                 return
@@ -162,7 +163,6 @@ def process_msg(user_json):
                         service=dialogue_content[7],
                         history=dialogue_content[10]
                     )
-                    dialogue_content[6] = False
                 if float(similarity_score) > 0.32:
                     dialogue_content[10].append(dialogue_content[2])
                     dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
@@ -209,12 +209,6 @@ def process_msg(user_json):
                             args=(
                                 (user_pipe[1], response_pipe[0]), agent, parameter, log, similarity_dict,
                                 conv_id))
-                # send_pipe, receive_pipe, first_utterance, process, single_finish, all_finish, first_utt,
-                # service_name, last_msg
-                # pipes_dict[conv_id] = [user_pipe, response_pipe, pipes_dict[conv_id][2], 0, False, False,
-                #                        True,
-                #                        "", "", 0, []]
-                # dialogue_content = pipes_dict[conv_id]
                 dialogue_content[0], dialogue_content[1] = user_pipe, response_pipe
                 dialogue_content[2] = re.sub("[\s++\.\!\/_,$%^*(+\"\')]+|[+——()?【】“”！，。？、~@#￥%……&*]+",
                                              "",
@@ -298,6 +292,7 @@ def process_msg(user_json):
                             # Continue to input without ending
                             if dialogue_content[4] is not True and recv['action'] == 'request':
                                 msg = "您询问的业务是否涉及" + recv['service'] + "，如若不涉及，请补充相关细节"
+                                dialogue_content[6] = False
                                 dialogue_content[8] = msg
                                 messageSender(conv_id=conv_id, msg=msg, log=log)
                                 pipes_dict[conv_id] = dialogue_content
@@ -409,6 +404,7 @@ def process_msg(user_json):
                         dialogue_content[9] += 1
                     if 'text' not in user_text.keys():
                         user_text = {'text': dialogue_content[2]}
+                    # start to diagnose
                     try:
                         # 做分词归一化
                         sentence = user_text['text']

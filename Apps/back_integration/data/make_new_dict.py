@@ -1,6 +1,6 @@
 import json
 
-from gov.slot_config import requirement_weight
+from ..gov.slot_config import requirement_weight
 
 requirement_all = []
 for i in range(len(requirement_weight)):
