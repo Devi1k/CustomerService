@@ -3,6 +3,8 @@
 /data/words.vector.gz
 /log
 
+_trial_temp/*
+
 .DS_Store
 gov/.DS_Store
 __pycache__/*
