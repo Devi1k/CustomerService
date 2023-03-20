@@ -364,6 +364,7 @@ def process_msg(user_json):
                         dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
                                                         log)
                         pipes_dict[conv_id] = dialogue_content
+                        return
             user_text = msg['content']
             options = []
             if 'text' in user_text.keys() and dialogue_content[9] != 1:
