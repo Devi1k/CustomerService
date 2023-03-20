@@ -60,8 +60,8 @@ def infer_onnx(sess, utterance):
 warm_start_text = "我想办理公共卫生许可"
 warm_start_time = time.time()
 intent = infer_onnx(sess, warm_start_text)
-log.info('warm start text:{},intent:{},cost time:{}'.format(warm_start_text, intent,str(time.time() - warm_start_time)))
-
+log.info(
+    'warm start text:{},intent:{},cost time:{}'.format(warm_start_text, intent, str(time.time() - warm_start_time)))
 
 
 @csrf_exempt
@@ -71,8 +71,9 @@ def identify(request):
     log.info('-----------------------------------------------------------')
     if request.method == 'GET':
         raw_text = request.GET.get('text')
+        start_time = time.time()
         intent = infer_onnx(sess, raw_text)
-        log.info('text:{},intent:{}'.format(raw_text, intent))
+        log.info('text:{},intent:{},cost time:{}'.format(raw_text, intent, str(time.time() - start_time)))
         return JsonResponse({'message': 'success', 'data': intent, 'code': 0})
     return JsonResponse({'message': 'unknown methods',
                          'code': 50012})

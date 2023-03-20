@@ -1,15 +1,15 @@
 from unittest import TestCase
 
-from ..ai_wrapper import get_faq_from_service, get_recommend,get_related_title
+from ..ai_wrapper import *
 
 
 class Test(TestCase):
     def test_get_faq_from_service(self):
         # score, answer, service = get_faq_from_service("需要第三方吗",
         #                                               "固定资产投资项目合理用能审查")  # add assertion here
-        sentence = "我的普通话考试等级是三级甲等，能不能办理教师资格证"
+        sentence = "在哪里办理"
 
-        service = "教师资格的认定"
+        service = "申办法定代表人证明公证咨询"
 
         score, answer, service = get_faq_from_service(sentence,
                                                       service, history=[])  # add assertion here
@@ -27,3 +27,8 @@ class Test(TestCase):
         res = get_related_title(text)
         print(res)
         # self.fail()
+
+    def test_get_faq(self):
+        text = "在哪里办理"
+        similar_score, answer, service = get_faq(text)
+        print(similar_score, answer, service)

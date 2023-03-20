@@ -34,14 +34,22 @@ def clean_log():
         timestamp = strftime("%Y%m%d%H%M%S", gmtime())
         # 获取日志的年月，和今天的年月
         today_m = int(timestamp[4:6])  # 今天的月份
-        file_m = int(i[12:14])  # 日志的月份
+        # matter_content.2023-03-14
+        file_m = int(i[-5:-3])  # 日志的月份
         today_y = int(timestamp[0:4])  # 今天的年份
-        file_y = int(i[7:11])  # 日志的年份
+        file_y = int(i[-10:-6])  # 日志的年份
+        today_d = int(timestamp[6:8])
+        file_d = int(i[-2:])
+        print(file_m, file_y, file_d)
+        print(today_m, today_y, today_d)
         # 对上个月的日志进行清理，即删除。
         # print(file_path)
         if file_m < today_m:
             if os.path.exists(file_path):  # 判断生成的路径对不对，防止报错
                 os.remove(file_path)  # 删除文件
+        elif file_d + 10 < today_d:
+            if os.path.exists(file_path):
+                os.remove(file_path)
         elif file_y < today_y:
             if os.path.exists(file_path):
                 os.remove(file_path)

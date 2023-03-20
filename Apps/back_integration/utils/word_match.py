@@ -11,6 +11,8 @@ from ..utils.ai_wrapper import get_related_title
 setattr(time, "clock", time.perf_counter)
 
 _similarity_smooth = lambda x, y, z, u: (x * y) + z - u
+pku = pkuseg.pkuseg(
+    user_dict=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data/new_dict.txt'))
 
 
 def sigmoid(x):
@@ -178,9 +180,6 @@ def is_multi_round(utterance, service_name):
     if max_score < utter_threshold and max_score != 0:
         return True, max_score
     else:
-        # todo：候选事项和上一轮事项几乎无关分两种情况：
-        #  1、用户事项变换
-        #  2、用户对话实际上是与上一轮有关 却检索出其他事项，同时事项与上一轮无关（解决不了）
         service_distance = lev(candidate_service, service_name)
         if service_distance > service_threshold or candidate_service == service_name:
             return True, service_distance
@@ -189,13 +188,8 @@ def is_multi_round(utterance, service_name):
 
 
 def cut_sentence_remove_stopwords(sentence):
-    # thu = thulac(
-    #     user_dict=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data/new_dict.txt'),
-    #     seg_only=True)
-    pku = pkuseg.pkuseg(user_dict=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data/new_dict.txt'))
     stop_words = [i.strip() for i in open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                                                        'data/baidu_stopwords.txt')).readlines()]
-    # seg = thu.cut(sentence)
     seg = pku.cut(sentence)
     seg_list = []
     for s in seg:

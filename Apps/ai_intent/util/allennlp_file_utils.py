@@ -31,7 +31,6 @@ from tqdm import tqdm as _tqdm
 # when exceptions are raised inside iterators.
 # It should have been fixed in 4.2.1, but it still
 # occurs.
-# TODO(Mark): Remove this once tqdm cleans up after itself properly.
 # https://github.com/tqdm/tqdm/issues/469
 _tqdm.monitor_interval = 0
 
@@ -250,7 +249,6 @@ def http_get(url: str, temp_file: IO) -> None:
         progress.close()
 
 
-# TODO(joelgrus): do we want to do checksums or anything like that?
 def get_from_cache(url: str, cache_dir: str = None) -> str:
     """
     Given a URL, look for the corresponding dataset in the local cache.

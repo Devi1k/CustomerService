@@ -24,6 +24,18 @@ with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
     syn_service = json.load(f)
 
 
+def get_item_content(first_utterance):
+    item_content = "https://miner.picp.net/chatBot/matterContent?text={}"
+    try:
+        res = requests.get(item_content.format(first_utterance), verify=False).json()['data']
+    except Exception:
+        res = requests.get(item_content.format(first_utterance), verify=False).json()['data']
+    if res == "I":
+        return "item"
+    else:
+        return "content"
+
+
 # 常见问题回答
 def get_faq(first_utterance, service=""):
     faq_path = "https://miner.picp.net/FAQ?First_utterance={}"
@@ -103,10 +115,6 @@ def get_answer(first_utterance, service_name, log, intent_class=''):
             log.info("IR: {}".format(ir_res))
             return ir_res
 
-
-        else:  # --diagnose
-            log.info("diagnosis: {}".format(service_name))
-            return "您询问的业务属于:" + service_name
     except Exception:
         pass
 
@@ -202,12 +210,15 @@ def get_faq_from_service(first_utterance, service, history):
     return max_score, answer, service
 
 
-def return_answer(dialogue_content, conv_id, service_name, log, link, intent_class=''):
-    similarity_score, answer, service = get_faq_from_service(first_utterance=dialogue_content[2],
-                                                             service=service_name, history=dialogue_content[10])
-    if float(similarity_score) < 0.34:
-        answer = get_answer(first_utterance=dialogue_content[2], service_name=dialogue_content[7], log=log,
-                            intent_class=intent_class)
+def return_answer(dialogue_content, conv_id, service_name, log, link, item_content="content", intent_class=''):
+    if item_content == "content":
+        similarity_score, answer, faq_service = get_faq_from_service(first_utterance=dialogue_content[2],
+                                                                     service=service_name, history=dialogue_content[10])
+        if float(similarity_score) < 0.34:
+            answer = get_answer(first_utterance=dialogue_content[2], service_name=dialogue_content[7], log=log,
+                                intent_class=intent_class)
+    else:
+        answer = "您询问的业务属于:" + service_name
     try:
         service_link = str(link[service_name])
     except KeyError:
