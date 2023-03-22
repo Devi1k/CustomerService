@@ -76,6 +76,7 @@ def process_msg(user_json):
             "user choice:" + msg['content']['service_name'])
     try:
         if msg['content']['service_name'] is not None:
+            start_time = time.time()
             service_name = msg['content']['service_name']
             dialogue_content = pipes_dict[conv_id]
             if service_name != "以上都不是" and dialogue_content[9] != 0:
@@ -86,6 +87,7 @@ def process_msg(user_json):
                                                  log=log,
                                                  link=link, item_content=item_content)
                 pipes_dict[conv_id] = dialogue_content
+                log.info("user choose service and return answer cost: {}".format(str(time.time() - start_time)))
                 return
             elif service_name == '以上都不是' and dialogue_content[9] > 1:
                 dialogue_content[4] = True
@@ -102,6 +104,7 @@ def process_msg(user_json):
                 pipes_dict[conv_id] = dialogue_content
                 return
             elif service_name != '以上都不是' and dialogue_content[9] == 0:
+                start_time = time.time()
                 dialogue_content[2] = service_name.replace("--", "-")
                 dialogue_content[10].append(dialogue_content[2])
                 dialogue_content[4] = True
@@ -125,6 +128,8 @@ def process_msg(user_json):
                 dialogue_content[2] = ""
                 dialogue_content[9] = 0
                 pipes_dict[conv_id] = dialogue_content
+                log.info("user choose faq and return answer cost: {}".format(str(time.time() - start_time)))
+
                 return
     except KeyError:
         pass
@@ -137,6 +142,7 @@ def process_msg(user_json):
                                    "", "", 0, []]
         # Handle multiple rounds of dialogues  Continue to speak
         elif conv_id in pipes_dict and pipes_dict[conv_id][5] is False and pipes_dict[conv_id][4] is True:
+            start_time = time.time()
             log.info("continue to ask")
             dialogue_content = pipes_dict[conv_id]
             # todo: wait to update new front end, delete this
@@ -169,6 +175,9 @@ def process_msg(user_json):
                                                     log)
                     dialogue_content[6] = True
                     pipes_dict[conv_id] = dialogue_content
+                    log.info(
+                        "multi round dialogue and return faq answer cost: {}".format(str(time.time() - start_time)))
+
                     return
             # Determine whether it is a multi-round conversation
             multi, similarity = is_multi_round(dialogue_content[2], dialogue_content[7])
@@ -193,11 +202,16 @@ def process_msg(user_json):
                     dialogue_content[2] = ""
                     dialogue_content[9] = 0
                     pipes_dict[conv_id] = dialogue_content
+                    log.info("same service and return answer cost: {}".format(str(time.time() - start_time)))
+
                 else:
                     options = get_related_title(dialogue_content[7])
                     dialogue_content[9] += 2
                     messageSender(conv_id=conv_id, msg="请选择与您相符的事项", log=log, options=options,
                                   end=False)
+                    log.info("multi round same service with blur service and return answer cost: {}".format(
+                        str(time.time() - start_time)))
+
             else:
                 log.info("Different matter")
                 # Rediagnosis
@@ -223,6 +237,9 @@ def process_msg(user_json):
                         dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
                                                         log)
                         pipes_dict[conv_id] = dialogue_content
+                        log.info(
+                            "multi round different service and return faq answer cost: {}".format(str(time.time() - start_time)))
+
                         return
                 # After initializing the session, send judgments and descriptions to the model (including
                 # subsequent judgments and supplementary descriptions).
@@ -251,6 +268,10 @@ def process_msg(user_json):
                                                      log=log,
                                                      link=link, item_content=item_content)
                     pipes_dict[conv_id] = dialogue_content
+                    log.info(
+                        "multi round different service with high similarity service and return answer cost: {}".format(
+                            str(time.time() - start_time)))
+
                 else:
                     dialogue_content[6] = False
                     dialogue_content[9] += 1
@@ -259,6 +280,9 @@ def process_msg(user_json):
                         dialogue_content[8] = options
                         messageSender(conv_id=conv_id, log=log, options=options, end=False)
                         pipes_dict[conv_id] = dialogue_content
+                        log.info("multi round different service and return related service cost: {}".format(
+                            str(time.time() - start_time)))
+
                     else:
                         try:
                             sentence = user_text['text']
@@ -292,6 +316,9 @@ def process_msg(user_json):
                             dialogue_content[8] = msg
                             messageSender(conv_id=conv_id, msg=msg, log=log)
                             pipes_dict[conv_id] = dialogue_content
+                            log.info("multi round different service and diagnose request cost: {}".format(
+                                str(time.time() - start_time)))
+
                         else:
                             dialogue_content[4] = True
                             dialogue_content[6] = True
@@ -334,9 +361,12 @@ def process_msg(user_json):
                             dialogue_content[2] = ""
                             dialogue_content[9] = 0
                             pipes_dict[conv_id] = dialogue_content
+                            log.info("multi round different service and diagnose answer cost: {}".format(
+                                str(time.time() - start_time)))
 
         #
         else:
+            start_time = time.time()
             dialogue_content = pipes_dict[conv_id]
             user_pipe, response_pipe = dialogue_content[0], dialogue_content[1]
             if 'content' not in msg.keys():
@@ -364,6 +394,9 @@ def process_msg(user_json):
                         dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
                                                         log)
                         pipes_dict[conv_id] = dialogue_content
+                        log.info(
+                            "different service and return faq answer cost: {}".format(str(time.time() - start_time)))
+
                         return
             user_text = msg['content']
             options = []
@@ -394,6 +427,8 @@ def process_msg(user_json):
                                                      log=log,
                                                      link=link, item_content=item_content)
                     pipes_dict[conv_id] = dialogue_content
+                    log.info("different service with high similarity service and return answer cost: {}".format(
+                        str(time.time() - start_time)))
                     return
             if dialogue_content[6] and len(options) > 0:
                 dialogue_content[6] = False
@@ -402,6 +437,8 @@ def process_msg(user_json):
                 dialogue_content[4] = False
                 pipes_dict[conv_id] = dialogue_content
                 messageSender(conv_id=conv_id, log=log, options=options, end=False)
+                log.info("multi round different service and return related service cost: {}".format(
+                    str(time.time() - start_time)))
             else:
                 if dialogue_content[6]:
                     dialogue_content[6] = False
@@ -452,6 +489,8 @@ def process_msg(user_json):
                     dialogue_content[8] = msg
                     pipes_dict[conv_id] = dialogue_content
                     messageSender(conv_id=conv_id, msg=msg, log=log)
+                    log.info("different service and diagnose request cost: {}".format(
+                        str(time.time() - start_time)))
                 elif dialogue_content[4] is True and recv['action'] == 'request' and user_text[
                     'text'] not in positive_list:
                     options = get_related_title(dialogue_content[2])
@@ -474,6 +513,9 @@ def process_msg(user_json):
                         messageSender(conv_id=conv_id, msg="请问还有其他问题吗，如果有请继续提问", log=log,
                                       end=True)
                         pipes_dict[conv_id] = dialogue_content
+                    log.info("different service and diagnose failed with options cost: {}".format(
+                        str(time.time() - start_time)))
+
                 else:
                     dialogue_content[4] = True
                     dialogue_content[6] = True
@@ -488,5 +530,8 @@ def process_msg(user_json):
                                                      log=log,
                                                      link=link, item_content=item_content)
                     pipes_dict[conv_id] = dialogue_content
+                    log.info("different service and diagnose answer cost: {}".format(
+                        str(time.time() - start_time)))
+
     except Exception as e:
         log.error(e, exc_info=True)
