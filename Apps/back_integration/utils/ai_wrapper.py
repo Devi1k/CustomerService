@@ -16,7 +16,7 @@ with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
           'r') as f:
     recommend = json.load(f)
 
-with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data/new_faq_recommend.json'),
+with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data/faq_with_service.json'),
           'r') as f:
     new_recommend = json.load(f)
 with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data/syn_service.json'),
@@ -159,6 +159,7 @@ def faq_diagnose(answer, dialogue_content, conv_id, log, service_name=""):
 
 def get_faq_from_service(first_utterance, service, history):
     from .word_match import cut_sentence_remove_stopwords
+    syn_list = []
     if service in syn_service.keys():
         syn_list = syn_service[service]
         for s in syn_list:
@@ -177,8 +178,11 @@ def get_faq_from_service(first_utterance, service, history):
     question_list = set()
     for k, v in question_dict.items():
         for ques, document in v.items():
-            ques = ques.replace(service, "")
-            question_list.add(ques)
+            if len(syn_list) > 0:
+                for s in syn_list:
+                    if s in ques:
+                        question_list.add(ques.replace(s, ""))
+            question_list.add(ques.replace(service, ""))
     question_list = list(question_list)
     answer = ""
     max_score = 0
@@ -188,10 +192,7 @@ def get_faq_from_service(first_utterance, service, history):
     for q in question_list:
         _q = re.sub("[\s++\.\!\/_,$%^*(+\"\')]+|[+——()?【】“”！，。？、~@#￥%……&*]+", "",
                     q)
-        # if "申请条件" in q:
-        #     print(1)
         num = 0
-
         for s in seg_list:
             if s in _q:
                 num += 1
