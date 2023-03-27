@@ -151,40 +151,7 @@ def longestCommonSubsequence(text1: str, text2: str) -> int:
     return dp[m][n]
 
 
-def is_multi_round(utterance, service_name):
-    if service_name == "":
-        return False, 0
-    high_frequency_statement = ['我要预约', '我想预约', '我想在线预约', '我要办理', '我想办理', '我想在线办理',
-                                '我想评价', '我要评价', '我想在线评价']
-    if utterance in high_frequency_statement:
-        return True, 0
-    # 当前最低阈值
-    # todo:待调
-    utter_threshold = 0.5697
-    service_threshold = 1.08
-    options = get_related_title(utterance)
-    candidate_service = ""
-    max_score = 0
-    for o in options:
-        lcs = longestCommonSubsequence(utterance, o)
-        if lcs <= 2:
-            continue
-        distance = lev(utterance, o, True, True)
-        distance = sigmoid(distance + lcs / len(o))
-        if max_score < distance:
-            max_score = distance
-            candidate_service = o
-    # 每句话和候选事项名称之间的相似度想给护照加注应该怎么办理
 
-    # 候选事项和对话内容有关
-    if max_score < utter_threshold and max_score != 0:
-        return True, max_score
-    else:
-        service_distance = lev(candidate_service, service_name)
-        if service_distance > service_threshold or candidate_service == service_name:
-            return True, service_distance
-        else:
-            return False, service_distance
 
 
 def cut_sentence_remove_stopwords(sentence):

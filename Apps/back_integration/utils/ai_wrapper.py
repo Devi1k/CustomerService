@@ -250,7 +250,14 @@ def return_answer(dialogue_content, conv_id, service_name, log, link, item_conte
     return dialogue_content
 
 
-def get_multi_res(first_utterance, service_name):
+def get_multi_res(first_utterance, service_name,dialogue_content):
+    similarity_score, answer, service_name = get_faq_from_service(
+        first_utterance=first_utterance,
+        service=service_name,
+        history=dialogue_content[10]
+    )
+    if float(similarity_score) > 0.32:
+        return answer
     answer = get_retrieval(first_utterance=first_utterance, service_name=service_name)
     business = get_business(first_utterance=first_utterance)
     answer = answer + '\n' + '(' + service_name + '——' + business + ')'
@@ -281,3 +288,12 @@ def get_recommend(service_name, history=None):
                 if scoreT > 0.38:
                     query_list.remove(q)
     return query_list[:5]
+
+
+def is_multi_round(utterance1, utterance2):
+    multi_path = "https://miner.picp.net/chatBot/multiround?pre_text={}&cur_text={}"
+    try:
+        res = requests.get(multi_path.format(utterance1, utterance2), verify=False).json()['data']
+    except Exception:
+        res = requests.get(multi_path.format(utterance1, utterance2), verify=False).json()['data']
+    return False if res == "false" else True

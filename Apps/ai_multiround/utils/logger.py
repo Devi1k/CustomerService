@@ -10,7 +10,7 @@ class Logger:
     def __init__(self, name):
         logging.basicConfig(level=logging.INFO,
                             format='%(asctime)s - File \"%(name)s/%(filename)s\" - line %(lineno)s - %(levelname)s - %(message)s')
-        self.LOG_PATH = os.getcwd() + '/Apps/ai_intent/log/intent'
+        self.LOG_PATH = os.getcwd() + '/Apps/ai_multiround/log/multiround'
         self.log_fmt = '%(asctime)s - File \"%(name)s/%(filename)s\" - line %(lineno)s - %(levelname)s - %(message)s'
         self.formatter = logging.Formatter(self.log_fmt)
         self.log = logging.getLogger(name)
@@ -24,10 +24,11 @@ class Logger:
         self.log.addHandler(self.log_file_handler)
         return self.log
 
+
 def clean_log():
-    path = os.getcwd() + '/Apps/ai_intent/log/'
+    path = os.getcwd() + '/Apps/ai_multiround/log/'
     for i in os.listdir(path):
-        if len(i) < 7:
+        if len(i) < 11:
             continue
         file_path = path + i  # 生成日志文件的路径
         timestamp = strftime("%Y%m%d%H%M%S", gmtime())
@@ -39,6 +40,7 @@ def clean_log():
         file_y = int(i[-10:-6])  # 日志的年份
         today_d = int(timestamp[6:8])
         file_d = int(i[-2:])
+        print(file_path)
         # 对上个月的日志进行清理，即删除。
         # print(file_path)
         if file_m < today_m:

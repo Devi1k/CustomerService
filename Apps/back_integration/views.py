@@ -82,6 +82,7 @@ def process_msg(user_json):
             if service_name != "以上都不是" and dialogue_content[9] != 0:
                 dialogue_content[7] = service_name.replace("--", "-")
                 item_content = get_item_content(dialogue_content[2])
+                dialogue_content[10].append(dialogue_content[2])
                 dialogue_content = return_answer(dialogue_content=dialogue_content, conv_id=conv_id,
                                                  service_name=dialogue_content[7],
                                                  log=log,
@@ -161,47 +162,21 @@ def process_msg(user_json):
                 dialogue_content[2] = re.sub("[\s++\.\!\/_,$%^*(+\"\')]+|[+——()?【】“”！，。？、~@#￥%……&*]+",
                                              "",
                                              dialogue_content[2])
-            # todo: multi judge
-            # todo: multi, similarity = is_multi_round(dialogue_content[2], dialogue_content[7])
-            if dialogue_content[6] is True:
-                similarity_score, answer, service_name = get_faq_from_service(
-                    first_utterance=dialogue_content[2],
-                    service=dialogue_content[7],
-                    history=dialogue_content[10]
-                )
-                if float(similarity_score) > 0.32:
-                    dialogue_content[10].append(dialogue_content[2])
-                    dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
-                                                    log)
-                    dialogue_content[6] = True
-                    pipes_dict[conv_id] = dialogue_content
-                    log.info(
-                        "multi round dialogue and return faq answer cost: {}".format(str(time.time() - start_time)))
-
-                    return
-            # Determine whether it is a multi-round conversation
-            multi, similarity = is_multi_round(dialogue_content[2], dialogue_content[7])
+            print(dialogue_content[2],dialogue_content[10][-1])
+            multi = is_multi_round(dialogue_content[2], dialogue_content[10][-1])
             if multi:
                 log.info("Same matter.")
                 dialogue_content[4] = True
                 dialogue_content[6] = True
                 if dialogue_content[7] not in blur_service.keys():
-                    # todo : move faq to multi res
-                    answer = get_multi_res(dialogue_content[2], dialogue_content[7])
-                    messageSender(conv_id=conv_id, msg=answer, log=log, end=dialogue_content[4])
-                    recommend = get_recommend(service_name=dialogue_content[7],
-                                              history=dialogue_content[10])
-                    if len(recommend) < 1:
-                        recommend = "请问还有其他问题吗，如果有请继续提问"
-                    dialogue_content[8] = recommend
-                    if isinstance(recommend, list):
-                        messageSender(conv_id=conv_id, msg="大家都在问", log=log, end=True,
-                                      service_name=service_name, options=recommend)
-                    else:
-                        messageSender(conv_id=conv_id, msg=recommend, log=log, end=dialogue_content[4])
-                    dialogue_content[2] = ""
-                    dialogue_content[9] = 0
+                    item_content = get_item_content(dialogue_content[2])
+                    dialogue_content[10].append(dialogue_content[2])
+                    dialogue_content = return_answer(dialogue_content=dialogue_content, conv_id=conv_id,
+                                                     service_name=dialogue_content[7],
+                                                     log=log,
+                                                     link=link, item_content=item_content)
                     pipes_dict[conv_id] = dialogue_content
+
                     log.info("same service and return answer cost: {}".format(str(time.time() - start_time)))
 
                 else:
@@ -227,7 +202,6 @@ def process_msg(user_json):
                 user_text = {'text': dialogue_content[2]}
                 log.info(user_text)
                 similar_score, answer = 0, ""
-                # todo: item content differ, if content get faq else judge multi round
                 item_content = get_item_content(dialogue_content[2])
                 if item_content == "content":
                     similar_score, answer, service_name = get_faq(dialogue_content[2])
@@ -238,7 +212,8 @@ def process_msg(user_json):
                                                         log)
                         pipes_dict[conv_id] = dialogue_content
                         log.info(
-                            "multi round different service and return faq answer cost: {}".format(str(time.time() - start_time)))
+                            "multi round different service and return faq answer cost: {}".format(
+                                str(time.time() - start_time)))
 
                         return
                 # After initializing the session, send judgments and descriptions to the model (including
@@ -263,6 +238,7 @@ def process_msg(user_json):
                     dialogue_content[7] = candidate_service
                     log.info("first_utterance: {}".format(dialogue_content[2]))
                     log.info("service_name: {}".format(candidate_service))
+                    dialogue_content[10].append(dialogue_content[2])
                     dialogue_content = return_answer(dialogue_content=dialogue_content, conv_id=conv_id,
                                                      service_name=candidate_service,
                                                      log=log,
@@ -422,6 +398,7 @@ def process_msg(user_json):
                     dialogue_content[7] = candidate_service
                     log.info("first_utterance: {}".format(dialogue_content[2]))
                     log.info("service_name: {}".format(candidate_service))
+                    dialogue_content[10].append(dialogue_content[2])
                     dialogue_content = return_answer(dialogue_content=dialogue_content, conv_id=conv_id,
                                                      service_name=candidate_service,
                                                      log=log,

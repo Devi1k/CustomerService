@@ -40,8 +40,6 @@ def clean_log():
         file_y = int(i[-10:-6])  # 日志的年份
         today_d = int(timestamp[6:8])
         file_d = int(i[-2:])
-        print(file_m, file_y, file_d)
-        print(today_m, today_y, today_d)
         # 对上个月的日志进行清理，即删除。
         # print(file_path)
         if file_m < today_m:

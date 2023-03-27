@@ -20,7 +20,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('chatBot', include('Apps.back_integration.urls')),
     path('chatBot/', include('Apps.ai_intent.urls')),
-    # path('chatBot/', include('Apps.ai_matter_content.urls')),
-
+    path('chatBot/', include('Apps.ai_matter_content.urls')),
+    path('chatBot/', include('Apps.ai_multiround.urls'))
 ]
 
