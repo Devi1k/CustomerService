@@ -101,20 +101,25 @@ def get_answer(first_utterance, service_name, log, intent_class=''):
         if intent_class == "QA":  # --QA match
             answer = get_retrieval(first_utterance, service_name)
             log.info("QA: {}".format(answer))
-            return answer
+
 
         # 业务推理
         elif intent_class == "NLI":  # --NLI
-            nli_res = get_nli(first_utterance, service_name)
-            log.info("NLI:{} ".format(nli_res))
-            return nli_res
+            answer = get_nli(first_utterance, service_name)
+            log.info("NLI:{} ".format(answer))
 
         # 文档检索
         elif intent_class == "IR":  # --IR
-            ir_res = get_retrieval(first_utterance, service_name)
-            log.info("IR: {}".format(ir_res))
-            return ir_res
+            answer = get_retrieval(first_utterance, service_name)
+            log.info("IR: {}".format(answer))
 
+        else:
+            answer = get_retrieval(first_utterance, service_name)
+            log.info("IR: {}".format(answer))
+
+        if answer == "":
+            answer = "暂无相关问题，请进入详情页查询"
+        return answer
     except Exception:
         pass
 
@@ -212,51 +217,55 @@ def get_faq_from_service(first_utterance, service, history):
 
 
 def return_answer(dialogue_content, conv_id, service_name, log, link, item_content="content", intent_class=''):
-    if item_content == "content":
-        similarity_score, answer, faq_service = get_faq_from_service(first_utterance=dialogue_content[2],
-                                                                     service=service_name, history=dialogue_content[10])
-        if float(similarity_score) < 0.34:
-            answer = get_answer(first_utterance=dialogue_content[2], service_name=dialogue_content[7], log=log,
-                                intent_class=intent_class)
-    else:
-        answer = "您询问的业务属于:" + service_name
     try:
-        service_link = str(link[service_name])
-    except KeyError:
-        service_link = ""
-    business = get_business(first_utterance=dialogue_content[2])
-    answer = answer + '\n' + '(' + service_name + '——' + business + ')'
-    dialogue_content[10].append(dialogue_content[2])
-    messageSender(conv_id=conv_id, msg=answer, log=log, link=service_link, end=True)
-    dialogue_content[4] = True
-    dialogue_content[6] = True
-    # pipes_dict[conv_id][3].kill()
-    if dialogue_content[3] != 0:
-        os.kill(dialogue_content[3], signal.SIGKILL)
-        log.info('process kill')
-    recommend = get_recommend(service_name=dialogue_content[7],
-                              history=dialogue_content[10])
-    if len(recommend) < 1:
-        recommend = "请问还有其他问题吗，如果有请继续提问"
-    dialogue_content[8] = recommend
-    log.info('provide recommend')
-    if isinstance(recommend, list):
-        messageSender(conv_id=conv_id, msg="大家都在问", log=log, end=True,
-                      service_name=service_name, options=dialogue_content[8])
-    else:
-        messageSender(conv_id=conv_id, msg=dialogue_content[8], log=log, end=dialogue_content[4])
-    dialogue_content[2] = ""
-    dialogue_content[9] = 0
+        if item_content == "content":
+            similarity_score, answer, faq_service = get_faq_from_service(first_utterance=dialogue_content[2],
+                                                                         service=service_name,
+                                                                         history=dialogue_content[10])
+            if float(similarity_score) < 0.34:
+                answer = get_answer(first_utterance=dialogue_content[2], service_name=dialogue_content[7], log=log,
+                                    intent_class=intent_class)
+        else:
+            answer = "您询问的业务属于:" + service_name
+        try:
+            service_link = str(link[service_name])
+        except KeyError:
+            service_link = ""
+        business = get_business(first_utterance=dialogue_content[2])
+        answer = answer + '\n' + '(' + service_name + '——' + business + ')'
+        dialogue_content[10].append(dialogue_content[2])
+        messageSender(conv_id=conv_id, msg=answer, log=log, link=service_link, end=True)
+        dialogue_content[4] = True
+        dialogue_content[6] = True
+        # pipes_dict[conv_id][3].kill()
+        if dialogue_content[3] != 0:
+            os.kill(dialogue_content[3], signal.SIGKILL)
+            log.info('process kill')
+        recommend = get_recommend(service_name=dialogue_content[7],
+                                  history=dialogue_content[10])
+        if len(recommend) < 1:
+            recommend = "请问还有其他问题吗，如果有请继续提问"
+        dialogue_content[8] = recommend
+        log.info('provide recommend')
+        if isinstance(recommend, list):
+            messageSender(conv_id=conv_id, msg="大家都在问", log=log, end=True,
+                          service_name=service_name, options=dialogue_content[8])
+        else:
+            messageSender(conv_id=conv_id, msg=dialogue_content[8], log=log, end=dialogue_content[4])
+        dialogue_content[2] = ""
+        dialogue_content[9] = 0
+    except Exception as e:
+        log.error(e, exc_info=True)
     return dialogue_content
 
 
-def get_multi_res(first_utterance, service_name,dialogue_content):
+def get_multi_res(first_utterance, service_name, dialogue_content):
     similarity_score, answer, service_name = get_faq_from_service(
         first_utterance=first_utterance,
         service=service_name,
         history=dialogue_content[10]
     )
-    if float(similarity_score) > 0.32:
+    if float(similarity_score) > 0.34:
         return answer
     answer = get_retrieval(first_utterance=first_utterance, service_name=service_name)
     business = get_business(first_utterance=first_utterance)
@@ -290,10 +299,10 @@ def get_recommend(service_name, history=None):
     return query_list[:5]
 
 
-def is_multi_round(utterance1, utterance2):
+def is_multi_round(pre_text, cur_text):
     multi_path = "https://miner.picp.net/chatBot/multiround?pre_text={}&cur_text={}"
     try:
-        res = requests.get(multi_path.format(utterance1, utterance2), verify=False).json()['data']
+        res = requests.get(multi_path.format(pre_text, cur_text), verify=False).json()['data']
     except Exception:
-        res = requests.get(multi_path.format(utterance1, utterance2), verify=False).json()['data']
+        res = requests.get(multi_path.format(pre_text, cur_text), verify=False).json()['data']
     return False if res == "false" else True

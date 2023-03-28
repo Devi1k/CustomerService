@@ -56,7 +56,6 @@ def chat(request):
             response = json.loads(response)
         except JSONDecodeError:
             return JsonResponse(result.getFailResult("Json Format Error"), safe=False)
-        # print(response)
         process_msg(response)
         return JsonResponse(result.getNothingResult(), safe=False)
     else:
@@ -83,6 +82,7 @@ def process_msg(user_json):
                 dialogue_content[7] = service_name.replace("--", "-")
                 item_content = get_item_content(dialogue_content[2])
                 dialogue_content[10].append(dialogue_content[2])
+                log.info("item content:{}".format(item_content))
                 dialogue_content = return_answer(dialogue_content=dialogue_content, conv_id=conv_id,
                                                  service_name=dialogue_content[7],
                                                  log=log,
@@ -162,8 +162,8 @@ def process_msg(user_json):
                 dialogue_content[2] = re.sub("[\s++\.\!\/_,$%^*(+\"\')]+|[+——()?【】“”！，。？、~@#￥%……&*]+",
                                              "",
                                              dialogue_content[2])
-            print(dialogue_content[2],dialogue_content[10][-1])
-            multi = is_multi_round(dialogue_content[2], dialogue_content[10][-1])
+            log.info("cur_msg:{},pre_msg:{}".format(dialogue_content[2], dialogue_content[10][-1]))
+            multi = is_multi_round(pre_text=dialogue_content[10][-1], cur_text=dialogue_content[2])
             if multi:
                 log.info("Same matter.")
                 dialogue_content[4] = True
@@ -171,6 +171,7 @@ def process_msg(user_json):
                 if dialogue_content[7] not in blur_service.keys():
                     item_content = get_item_content(dialogue_content[2])
                     dialogue_content[10].append(dialogue_content[2])
+                    log.info("item content:{}".format(item_content))
                     dialogue_content = return_answer(dialogue_content=dialogue_content, conv_id=conv_id,
                                                      service_name=dialogue_content[7],
                                                      log=log,
@@ -203,10 +204,10 @@ def process_msg(user_json):
                 log.info(user_text)
                 similar_score, answer = 0, ""
                 item_content = get_item_content(dialogue_content[2])
+                log.info("item content:{}".format(item_content))
                 if item_content == "content":
                     similar_score, answer, service_name = get_faq(dialogue_content[2])
-                    print(answer)
-                    if float(similar_score) > 0.9230:
+                    if float(similar_score) > 0.98:
                         dialogue_content[10].append(dialogue_content[2])
                         dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
                                                         log)
@@ -219,7 +220,7 @@ def process_msg(user_json):
                 # After initializing the session, send judgments and descriptions to the model (including
                 # subsequent judgments and supplementary descriptions).
                 options = get_related_title(dialogue_content[2])
-                business_threshold = 0.9102
+                business_threshold = 0.97
                 candidate_service = ""
                 max_score = 0
                 for o in options:
@@ -361,10 +362,12 @@ def process_msg(user_json):
                                              dialogue_content[2])
             # item content differ, if content get faq else judge multi round
             item_content = get_item_content(dialogue_content[2])
+            log.info("item content:{}".format(item_content))
             if dialogue_content[6] is True:
                 if item_content == "content":
                     similar_score, answer, service_name = get_faq(dialogue_content[2])
-                    if float(similar_score) > 0.9230:
+
+                    if float(similar_score) > 0.98:
                         dialogue_content[7] = service_name
                         dialogue_content[10].append(dialogue_content[2])
                         dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
@@ -380,7 +383,7 @@ def process_msg(user_json):
                 # IR
                 options = get_related_title(dialogue_content[2])
                 # 若对话内容包含的事项足够明确
-                business_threshold = 0.9102
+                business_threshold = 0.97
                 candidate_service = ""
                 max_score = 0
                 for o in options:
