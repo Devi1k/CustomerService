@@ -4,6 +4,11 @@ from ..ai_wrapper import *
 
 
 class Test(TestCase):
+
+    def test_get_related_title(self):
+        sentence = "危险化学品安全使用许可"
+        res = get_related_title(sentence)
+        print(res)
     def test_get_faq_from_service(self):
         # score, answer, service = get_faq_from_service("需要第三方吗",
         #                                               "固定资产投资项目合理用能审查")  # add assertion here
@@ -22,13 +27,10 @@ class Test(TestCase):
         res = get_recommend(service_name, history)
         print(res)
 
-    def test_get_related_title(self):
-        text = "新车上牌办理什么业务"
-        res = get_related_title(text)
-        print(res)
-        # self.fail()
 
     def test_get_faq(self):
         text = "在哪里办理"
         similar_score, answer, service = get_faq(text)
         print(similar_score, answer, service)
+
+

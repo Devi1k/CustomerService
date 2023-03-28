@@ -162,8 +162,14 @@ def process_msg(user_json):
                 dialogue_content[2] = re.sub("[\s++\.\!\/_,$%^*(+\"\')]+|[+——()?【】“”！，。？、~@#￥%……&*]+",
                                              "",
                                              dialogue_content[2])
-            log.info("cur_msg:{},pre_msg:{}".format(dialogue_content[2], dialogue_content[10][-1]))
-            multi = is_multi_round(pre_text=dialogue_content[10][-1], cur_text=dialogue_content[2])
+            try:
+                log.info("cur_msg:{},pre_msg:{}".format(dialogue_content[2], dialogue_content[10][-1]))
+                if dialogue_content[10][-1] == '' or len(dialogue_content[10]) == 0:
+                    multi = False
+                else:
+                    multi = is_multi_round(pre_text=dialogue_content[10][-1], cur_text=dialogue_content[2])
+            except IndexError:
+                multi = False
             if multi:
                 log.info("Same matter.")
                 dialogue_content[4] = True
