@@ -173,6 +173,9 @@ def get_faq_from_service(first_utterance, service, history):
         first_utterance = first_utterance.replace(service, "")
     utterance = first_utterance.replace("--", '-').replace(" ", "")
     seg_list = cut_sentence_remove_stopwords(sentence=utterance)
+    for s in seg_list.copy():
+        if s in service:
+            seg_list.remove(s)
     utterance = ''.join(seg_list)
     utterance = re.sub("[\s++\.\!\/_,$%^*(+\"\')]+|[+——()?【】“”！，。？、~@#￥%……&*]+", "",
                        utterance)
@@ -222,7 +225,7 @@ def return_answer(dialogue_content, conv_id, service_name, log, link, item_conte
             similarity_score, answer, faq_service = get_faq_from_service(first_utterance=dialogue_content[2],
                                                                          service=service_name,
                                                                          history=dialogue_content[10])
-            if float(similarity_score) < 0.34:
+            if float(similarity_score) < 0.285:
                 answer = get_answer(first_utterance=dialogue_content[2], service_name=dialogue_content[7], log=log,
                                     intent_class=intent_class)
         else:
@@ -265,7 +268,7 @@ def get_multi_res(first_utterance, service_name, dialogue_content):
         service=service_name,
         history=dialogue_content[10]
     )
-    if float(similarity_score) > 0.34:
+    if float(similarity_score) > 0.285:
         return answer
     answer = get_retrieval(first_utterance=first_utterance, service_name=service_name)
     business = get_business(first_utterance=first_utterance)
