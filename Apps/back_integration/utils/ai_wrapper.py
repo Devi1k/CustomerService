@@ -220,27 +220,31 @@ def get_faq_from_service(first_utterance, service, history):
 
 
 def return_answer(dialogue_content, conv_id, service_name, log, link, item_content="content", intent_class=''):
+
     try:
-        if item_content == "content":
-            similarity_score, answer, faq_service = get_faq_from_service(first_utterance=dialogue_content[2],
-                                                                         service=service_name,
-                                                                         history=dialogue_content[10])
-            if float(similarity_score) < 0.285:
-                answer = get_answer(first_utterance=dialogue_content[2], service_name=dialogue_content[7], log=log,
-                                    intent_class=intent_class)
-        else:
-            answer = "您询问的业务属于:" + service_name
-        try:
-            service_link = str(link[service_name])
-        except KeyError:
+        if dialogue_content[2] == "":
+            answer = "抱歉，出现未知错误"
             service_link = ""
-        business = get_business(first_utterance=dialogue_content[2])
-        answer = answer + '\n' + '(' + service_name + '——' + business + ')'
+        else:
+            if item_content == "content":
+                similarity_score, answer, faq_service = get_faq_from_service(first_utterance=dialogue_content[2],
+                                                                             service=service_name,
+                                                                             history=dialogue_content[10])
+                if float(similarity_score) < 0.285:
+                    answer = get_answer(first_utterance=dialogue_content[2], service_name=dialogue_content[7], log=log,
+                                        intent_class=intent_class)
+            else:
+                answer = "您询问的业务属于:" + service_name
+            try:
+                service_link = str(link[service_name])
+            except KeyError:
+                service_link = ""
+            business = get_business(first_utterance=dialogue_content[2])
+            answer = answer + '\n' + '(' + service_name + '——' + business + ')'
         dialogue_content[10].append(dialogue_content[2])
         messageSender(conv_id=conv_id, msg=answer, log=log, link=service_link, end=True)
         dialogue_content[4] = True
         dialogue_content[6] = True
-        # pipes_dict[conv_id][3].kill()
         if dialogue_content[3] != 0:
             os.kill(dialogue_content[3], signal.SIGKILL)
             log.info('process kill')

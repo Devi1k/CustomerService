@@ -81,7 +81,9 @@ def process_msg(user_json):
             if service_name != "以上都不是" and dialogue_content[9] != 0:
                 dialogue_content[7] = service_name.replace("--", "-")
                 item_content = get_item_content(dialogue_content[2])
-                dialogue_content[10].append(dialogue_content[2])
+                if dialogue_content[2] != "":
+                    log.info("add message to history")
+                    dialogue_content[10].append(dialogue_content[2])
                 log.info("item content:{}".format(item_content))
                 dialogue_content = return_answer(dialogue_content=dialogue_content, conv_id=conv_id,
                                                  service_name=dialogue_content[7],
@@ -140,7 +142,7 @@ def process_msg(user_json):
             user_pipe, response_pipe = Pipe(), Pipe()
             log.info("new conv")
             pipes_dict[conv_id] = [user_pipe, response_pipe, "", 0, False, False, True,
-                                   "", "", 0, []]
+                                   "", "", 0, [], ""]
         # Handle multiple rounds of dialogues  Continue to speak
         elif conv_id in pipes_dict and pipes_dict[conv_id][5] is False and pipes_dict[conv_id][4] is True:
             start_time = time.time()
@@ -159,15 +161,20 @@ def process_msg(user_json):
                     dialogue_content[2] = msg['content']['text'].replace("--", "-")
                 except KeyError:
                     dialogue_content[2] = msg['content']['service_name'].replace("--", "-")
-                dialogue_content[2] = re.sub("[\s++\.\!\/_,$%^*(+\"\')]+|[+——()?【】“”！，。？、~@#￥%……&*]+",
+                dialogue_content[2] = re.sub("[\s++\.\!\/_$%^*]+|[+——()?【】“”、~@#￥%……&*]+|[0-9]+",
                                              "",
-                                             dialogue_content[2])
+                                             dialogue_content[2].replace("--", "-"))
             try:
-                log.info("cur_msg:{},pre_msg:{}".format(dialogue_content[2], dialogue_content[10][-1]))
+                print(dialogue_content[10])
+                prev_msg = ""
+                for msg in dialogue_content[10]:
+                    if msg != "":
+                        prev_msg = msg
+                log.info("cur_msg:{},pre_msg:{}".format(dialogue_content[2], prev_msg))
                 if dialogue_content[10][-1] == '' or len(dialogue_content[10]) == 0:
                     multi = False
                 else:
-                    multi = is_multi_round(pre_text=dialogue_content[10][-1], cur_text=dialogue_content[2])
+                    multi = is_multi_round(pre_text=prev_msg, cur_text=dialogue_content[2])
             except IndexError:
                 multi = False
             if multi:
@@ -203,7 +210,7 @@ def process_msg(user_json):
                                 (user_pipe[1], response_pipe[0]), agent, parameter, log, similarity_dict,
                                 conv_id))
                 dialogue_content[0], dialogue_content[1] = user_pipe, response_pipe
-                dialogue_content[2] = re.sub("[\s++\.\!\/_,$%^*(+\"\')]+|[+——()?【】“”！，。？、~@#￥%……&*]+",
+                dialogue_content[2] = re.sub("[\s++\.\!\/_$%^*]+|[+——()?【】“”、~@#￥%……&*]+|[0-9]+",
                                              "",
                                              dialogue_content[2].replace("--", "-"))
                 user_text = {'text': dialogue_content[2]}
@@ -213,7 +220,7 @@ def process_msg(user_json):
                 log.info("item content:{}".format(item_content))
                 if item_content == "content":
                     similar_score, answer, service_name = get_faq(dialogue_content[2])
-                    if float(similar_score) > 0.92:
+                    if float(similar_score) > 0.97:
                         dialogue_content[10].append(dialogue_content[2])
                         dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
                                                         log)
@@ -282,7 +289,7 @@ def process_msg(user_json):
                             # messageSender(conv_id=conv_id, msg="会话结束", log=log, end=True)
                             return
                         if user_text['text'] != dialogue_content[2]:
-                            dialogue_content[2] += user_text['text']
+                            dialogue_content[11] += user_text['text']
                         recv = response_pipe[1].recv()
                         # The message format of the model received from the model is
                         """
@@ -363,9 +370,9 @@ def process_msg(user_json):
                     dialogue_content[2] = msg['content']['text'].replace("--", "-")
                 except KeyError:
                     dialogue_content[2] = msg['content']['service_name'].replace("--", "-")
-                dialogue_content[2] = re.sub("[\s++\.\!\/_,$%^*(+\"\')]+|[+——()?【】“”！，。？、~@#￥%……&*]+",
+                dialogue_content[2] = re.sub("[\s++\.\!\/_$%^*]+|[+——()?【】“”、~@#￥%……&*]+|[0-9]+",
                                              "",
-                                             dialogue_content[2])
+                                             dialogue_content[2].replace("--", "-"))
             # item content differ, if content get faq else judge multi round
             item_content = get_item_content(dialogue_content[2])
             log.info("item content:{}".format(item_content))
@@ -373,7 +380,7 @@ def process_msg(user_json):
                 if item_content == "content":
                     similar_score, answer, service_name = get_faq(dialogue_content[2])
 
-                    if float(similar_score) > 0.92:
+                    if float(similar_score) > 0.97:
                         dialogue_content[7] = service_name
                         dialogue_content[10].append(dialogue_content[2])
                         dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
@@ -459,7 +466,7 @@ def process_msg(user_json):
                     # messageSender(conv_id=conv_id, msg="会话结束", log=log)
                     # continue
                 if user_text['text'] != dialogue_content[2]:
-                    dialogue_content[2] += user_text['text']
+                    dialogue_content[11] += user_text['text']
                 recv = response_pipe[1].recv()
                 # The message format of the model received from the model is
                 """
@@ -479,7 +486,7 @@ def process_msg(user_json):
                         str(time.time() - start_time)))
                 elif dialogue_content[4] is True and recv['action'] == 'request' and user_text[
                     'text'] not in positive_list:
-                    options = get_related_title(dialogue_content[2])
+                    options = get_related_title(dialogue_content[11])
                     # pipes_dict[conv_id][4] = True
                     dialogue_content[9] += 1
                     if len(options) > 0:
