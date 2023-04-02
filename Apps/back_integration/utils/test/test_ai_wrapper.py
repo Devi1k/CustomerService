@@ -12,9 +12,9 @@ class Test(TestCase):
     def test_get_faq_from_service(self):
         # score, answer, service = get_faq_from_service("需要第三方吗",
         #                                               "固定资产投资项目合理用能审查")  # add assertion here
-        sentence = "办理地点在哪里"
+        sentence = "办理结果是什么"
 
-        service = "在公路、高速公路上行驶超过公路、桥梁技术标准的车辆的许可（公路）-在公路、高速公路上行驶超过公路、桥梁技术标准的车辆的许可（本市II类）"
+        service = "固定资产投资项目合理用能审查"
 
         score, answer, service = get_faq_from_service(sentence,
                                                       service, history=[])  # add assertion here
