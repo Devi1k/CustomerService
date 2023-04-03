@@ -222,9 +222,10 @@ def process_msg(user_json):
                 if item_content == "content":
                     similar_score, answer, service_name = get_faq(dialogue_content[2])
                     if float(similar_score) > 0.97:
+                        dialogue_content[7] = service_name
                         dialogue_content[10].append(dialogue_content[2])
                         dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
-                                                        log)
+                                                        log, service_name=service_name)
                         pipes_dict[conv_id] = dialogue_content
                         log.info(
                             "multi round different service and return faq answer cost: {}".format(
@@ -385,7 +386,7 @@ def process_msg(user_json):
                         dialogue_content[7] = service_name
                         dialogue_content[10].append(dialogue_content[2])
                         dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
-                                                        log)
+                                                        log, service_name=service_name)
                         pipes_dict[conv_id] = dialogue_content
                         log.info(
                             "different service and return faq answer cost: {}".format(str(time.time() - start_time)))

@@ -151,13 +151,15 @@ def longestCommonSubsequence(text1: str, text2: str) -> int:
     return dp[m][n]
 
 
-
-
-
-def cut_sentence_remove_stopwords(sentence):
-    stop_words = [i.strip() for i in open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                                                       'data/baidu_stopwords.txt')).readlines()]
+def cut_sentence_remove_stopwords(sentence, category="faq"):
+    if category == "faq":
+        stop_words = [i.strip() for i in open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                                           'data/baidu_stopwords.txt')).readlines()]
+    else:
+        stop_words = [i.strip() for i in open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                                                           'data/stopwords_ir.txt')).readlines()]
     seg = pku.cut(sentence)
+
     seg_list = []
     for s in seg:
         seg_list.append(s)

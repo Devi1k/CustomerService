@@ -12,9 +12,9 @@ class Test(TestCase):
     def test_get_faq_from_service(self):
         # score, answer, service = get_faq_from_service("需要第三方吗",
         #                                               "固定资产投资项目合理用能审查")  # add assertion here
-        sentence = "我想开一家大众浴池，需要办理卫生许可证吗"
+        sentence = "要办理什么证"
 
-        service = "公共场所卫生许可-设立"
+        service = "药品经营许可证核发（零售）-药品经营许可证核发、变更、换证（零售）-核发（延续）"
 
         score, answer, service = get_faq_from_service(sentence,
                                                       service, history=[])  # add assertion here

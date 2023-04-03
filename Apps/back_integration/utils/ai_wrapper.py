@@ -72,7 +72,7 @@ def get_nli(first_utterance, service_name):
 # 进入对话后的检索事项
 def get_related_title(first_utterance):
     from ..utils.word_match import cut_sentence_remove_stopwords
-    first_utterance = ''.join(cut_sentence_remove_stopwords(first_utterance))
+    first_utterance = ''.join(cut_sentence_remove_stopwords(first_utterance,category="ir"))
     title_path = "https://burninghell.xicp.net/getRelatedTitle/ver2?query={}"
     # title_res = []
     try:
@@ -174,7 +174,7 @@ def get_faq_from_service(first_utterance, service, history):
     utterance = first_utterance.replace("--", '-').replace(" ", "")
     seg_list = cut_sentence_remove_stopwords(sentence=utterance)
     for s in seg_list.copy():
-        if s in service:
+        if s in service and len(s) > 2:
             seg_list.remove(s)
     utterance = ''.join(seg_list)
     utterance = re.sub("[\s++\.\!\/_,$%^*(+\"\')]+|[+——()?【】“”！，。？、~@#￥%……&*]+", "",
