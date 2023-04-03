@@ -186,11 +186,7 @@ def get_faq_from_service(first_utterance, service, history):
     question_list = set()
     for k, v in question_dict.items():
         for ques, document in v.items():
-            if len(syn_list) > 0:
-                for s in syn_list:
-                    if s in ques:
-                        question_list.add(ques.replace(s, ""))
-            question_list.add(ques.replace(service, ""))
+            question_list.add(ques)
     question_list = list(question_list)
     answer = ""
     max_score = 0
