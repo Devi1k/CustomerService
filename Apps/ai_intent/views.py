@@ -1,29 +1,19 @@
 import json
-import logging
 import os
-import re
 import time
-from logging.handlers import TimedRotatingFileHandler
 from time import strftime, gmtime
 
 import numpy as np
 import onnxruntime as ort
 
-import torch
 from django.http import JsonResponse
 # Create your views here.
 from django.views.decorators.csrf import csrf_exempt
 
-# from convlab2.util.file_util import cached_path
-from .nlp_cls.IntentNLU import NLU
 from .nlp_cls.dataloader import Dataloader
-from .nlp_cls.jointBERT import JointBERT
-from .nlp_cls.postprocess import recover_intent
 from .util.logger import Logger
 
 log = Logger('intent').getLogger()
-
-
 
 
 def build_predict_text_raw(text, context=None):
@@ -95,6 +85,8 @@ intent_vocab = json.load(open(project_path + 'processed_data/intent_vocab.json')
 
 dataloader = Dataloader(intent_vocab=intent_vocab,
                         pretrained_weights="hfl/chinese-bert-wwm-ext")
+log.info(ort.__version__)
+log.info(ort.get_device())
 sess = ort.InferenceSession(project_path + 'output/ai_intent.onnx', providers=['CUDAExecutionProvider'])
 
 log.info('warming up')
@@ -139,7 +131,7 @@ def intent_cls(request):
         if raw_text == "":
             return JsonResponse({'message': 'message format error',
                                  'code': 50012})
-        intent = infer_onnx(sess,raw_text)
+        intent = infer_onnx(sess, raw_text)
         log.info('text:{},intent:{}'.format(raw_text, intent))
         return JsonResponse({'message': 'success', 'data': intent, 'code': 0})
     return JsonResponse({'message': 'unknown methods',

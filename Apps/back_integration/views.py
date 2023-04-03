@@ -96,6 +96,7 @@ def process_msg(user_json):
                 dialogue_content[4] = True
                 dialogue_content[8] = "抱歉，未能找到您所需的事项。请问还有其他问题吗，如果有请继续提问。"
                 dialogue_content[7] = ""
+                dialogue_content[10] = []
                 messageSender(conv_id=conv_id, msg=dialogue_content[8], log=log,
                               end=dialogue_content[4])
                 dialogue_content[6] = True
@@ -493,14 +494,15 @@ def process_msg(user_json):
                         pipes_dict[conv_id] = dialogue_content
                         messageSender(conv_id=conv_id, log=log, options=options, end=False)
                     else:
-                        answer = "抱歉，无法回答当前问题"
+                        answer = "抱歉，未能找到您所需的事项。请问还有其他问题吗，如果有请继续提问。"
                         dialogue_content[6] = True
-                        # pipes_dict[conv_id][3].kill()
+                        dialogue_content[10] = []
                         if dialogue_content[3] != 0:
                             os.kill(dialogue_content[3], signal.SIGKILL)
                         # log.info('process kill')
                         dialogue_content[2] = ""
                         dialogue_content[9] = 0
+
                         messageSender(conv_id=conv_id, log=log, msg=answer, end=False)
                         dialogue_content[8] = "请问还有其他问题吗，如果有请继续提问"
                         messageSender(conv_id=conv_id, msg="请问还有其他问题吗，如果有请继续提问", log=log,
