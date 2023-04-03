@@ -6,6 +6,9 @@ import time
 from logging.handlers import TimedRotatingFileHandler
 from time import strftime, gmtime
 
+import numpy as np
+import onnxruntime as ort
+
 import torch
 from django.http import JsonResponse
 # Create your views here.
@@ -21,69 +24,85 @@ from .util.logger import Logger
 log = Logger('intent').getLogger()
 
 
-class BERTNLU(NLU):
-    def __init__(self, config_file='crosswoz_all.json', model_file='bert_crosswoz.zip'):
-        # assert mode == 'usr' or mode == 'sys' or mode == 'all'
-        config_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                                   'ai_intent/config/{}'.format(config_file))
-        config = json.load(open(config_file))
-        DEVICE = config['DEVICE']
-        root_dir = os.path.dirname(os.path.abspath(__file__))
-        data_dir = os.path.join(root_dir, config['data_dir'])
-        output_dir = os.path.join(root_dir, config['output_dir'])
 
-        # if not os.path.exists(os.path.join(data_dir, 'intent_vocab.json')):
-        #     preprocess()
 
-        intent_vocab = json.load(open(os.path.join(data_dir, 'intent_vocab.json')))
-        dataloader = Dataloader(intent_vocab=intent_vocab,
-                                pretrained_weights=config['model']['pretrained_weights'])
+def build_predict_text_raw(text, context=None):
+    if context is None:
+        context = list()
+    device = "cpu"
+    # tokenizer = BertTokenizer.from_pretrained("hfl/chinese-bert-wwm-ext")
+    ori_word_seq = dataloader.tokenizer.tokenize(text)
+    # ori_tag_seq = ['O'] * len(ori_word_seq)
+    context_size = 1
+    context_seq = dataloader.tokenizer.encode('[CLS] ' + ' [SEP] '.join(context[-context_size:]))
+    intents = []
+    multi_round = []
+    da = {}
 
-        log.info('intent num:{}'.format(len(intent_vocab)))
+    word_seq, new2ori = ori_word_seq, None
+    batch_data = [[ori_word_seq, intents, [], [], context_seq,
+                   new2ori, word_seq, dataloader.seq_intent2id(intents)]]
 
-        best_model_path = os.path.join(output_dir, 'pytorch_model.bin')
-        log.info('Load from:{}'.format( best_model_path))
-        model = JointBERT(config['model'], DEVICE, dataloader.intent_dim)
-        model.load_state_dict(torch.load(os.path.join(output_dir, 'pytorch_model.bin'), DEVICE))
-        model.to(DEVICE)
-        model.eval()
+    pad_batch = dataloader.pad_batch(batch_data)
+    pad_batch = tuple(t.to(device) for t in pad_batch)
+    # word_seq_tensor, intent_tensor, word_mask_tensor, context_seq_tensor, context_mask_tensor = pad_batch
+    # context_seq_tensor, context_mask_tensor = None, None
+    return pad_batch
 
-        self.model = model
-        self.dataloader = dataloader
-        log.info("BERTNLU loaded")
 
-    def predict(self, utterance, context=list()):
-        ori_word_seq = self.dataloader.tokenizer.tokenize(utterance)
-        # ori_tag_seq = ['O'] * len(ori_word_seq)
-        context_size = 1
-        context_seq = self.dataloader.tokenizer.encode('[CLS] ' + ' [SEP] '.join(context[-context_size:]))
-        intents = []
-        da = {}
+def build_predict_text(text):
+    pad_batch = build_predict_text_raw(text)
+    # pad_batch = tuple(t.to("gpu:0") for t in pad_batch)
+    word_seq_tensor, intent_tensor, word_mask_tensor, context_seq_tensor, context_mask_tensor = pad_batch
+    intent_tensor = None
+    context_seq_tensor, context_mask_tensor = None, None
+    return word_seq_tensor, intent_tensor, word_mask_tensor, context_seq_tensor, context_mask_tensor
 
-        word_seq, new2ori = ori_word_seq, None
-        batch_data = [[ori_word_seq, intents, da, context_seq,
-                       new2ori, word_seq, self.dataloader.seq_intent2id(intents)]]
 
-        pad_batch = self.dataloader.pad_batch(batch_data)
-        pad_batch = tuple(t.to(self.model.device) for t in pad_batch)
-        word_seq_tensor, intent_tensor, word_mask_tensor, context_seq_tensor, context_mask_tensor = pad_batch
-        context_seq_tensor, context_mask_tensor = None, None
-        intent_logits = self.model.forward(word_seq_tensor, word_mask_tensor,
-                                           context_seq_tensor=context_seq_tensor,
-                                           context_mask_tensor=context_mask_tensor)[0]
-        intent_logits = intent_logits.detach().cpu().numpy()
-        intent = recover_intent(self.dataloader, intent_logits[0],
-                                batch_data[0][0], batch_data[0][-4])
-        return intent[0][0]
+def to_numpy(tensor):
+    return tensor.detach().cpu().numpy() if tensor.requires_grad else tensor.cpu().numpy()
+
+
+def infer_onnx(sess, utterance):
+    word_seq_tensor, intent_tensor, word_mask_tensor, context_seq_tensor, context_mask_tensor = build_predict_text(
+        utterance)
+    input = {
+        'word_seq_tensor': to_numpy(word_seq_tensor),
+        'word_mask_tensor': to_numpy(word_mask_tensor),
+    }
+
+    def get_output_name(onnx_session):
+        """
+        output_name = onnx_session.get_outputs()[0].name
+        :param onnx_session:
+        :return:
+        """
+        output_name = []
+        for node in onnx_session.get_outputs():
+            output_name.append(node.name)
+        return output_name
+
+    # input_name = sess.get_inputs()[0].name
+    out_name = get_output_name(sess)
+    intent = sess.run(out_name, input)
+    intent_index = np.argmax(intent)
+    return dataloader.id2intent[intent_index]
 
 
 log.info('model loading')
-nlu = BERTNLU(config_file='crosswoz_all.json')
+project_path = os.getcwd() + "/Apps/ai_intent/"
+intent_vocab = json.load(open(project_path + 'processed_data/intent_vocab.json'))
+
+dataloader = Dataloader(intent_vocab=intent_vocab,
+                        pretrained_weights="hfl/chinese-bert-wwm-ext")
+sess = ort.InferenceSession(project_path + 'output/ai_intent.onnx', providers=['CUDAExecutionProvider'])
+
 log.info('warming up')
+
 start_time = time.time()
-log.info('text:人才绿卡A卡的办理条件,intent:{},cost_time:{}'.format(nlu.predict(
-    '人才绿卡A卡的办理条件'),
-    str(time.time()-start_time)))
+log.info('text:人才绿卡A卡的办理条件,intent:{},cost_time:{}'.format(infer_onnx(sess,
+                                                                               '人才绿卡A卡的办理条件'),
+                                                                    str(time.time() - start_time)))
 log.info('warm up finish. Waiting for messages')
 
 
@@ -116,8 +135,11 @@ def intent_cls(request):
     clean_log()
     log.info('-----------------------------------------------------------')
     if request.method == 'GET':
-        raw_text = request.GET.get('text')
-        intent = nlu.predict(raw_text)
+        raw_text = request.GET.get('text').strip()
+        if raw_text == "":
+            return JsonResponse({'message': 'message format error',
+                                 'code': 50012})
+        intent = infer_onnx(sess,raw_text)
         log.info('text:{},intent:{}'.format(raw_text, intent))
         return JsonResponse({'message': 'success', 'data': intent, 'code': 0})
     return JsonResponse({'message': 'unknown methods',
