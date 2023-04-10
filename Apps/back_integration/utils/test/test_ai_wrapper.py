@@ -6,7 +6,7 @@ from ..ai_wrapper import *
 class Test(TestCase):
 
     def test_get_related_title(self):
-        sentence = "危险化学品安全使用许可"
+        sentence = "个人手机业务"
         res = get_related_title(sentence)
         print(res)
     def test_get_faq_from_service(self):

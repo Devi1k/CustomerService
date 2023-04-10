@@ -195,12 +195,27 @@ def process_msg(user_json):
                     log.info("same service and return answer cost: {}".format(str(time.time() - start_time)))
 
                 else:
-                    options = get_related_title(dialogue_content[7])
-                    dialogue_content[9] += 2
-                    messageSender(conv_id=conv_id, msg="请选择与您相符的事项", log=log, options=options,
-                                  end=False)
-                    log.info("multi round same service with blur service and return answer cost: {}".format(
-                        str(time.time() - start_time)))
+                    similarity_score, answer, service_name = get_faq_from_service(first_utterance=dialogue_content[2],
+                                                                                  service=dialogue_content[7],
+                                                                                  history=dialogue_content[10])
+                    log.info(str(round(similarity_score, 2)) + "  " + answer)
+                    if similarity_score > 0.5:
+                        # messageSender(conv_id=conv_id, msg=answer, log=log, end=True)
+                        dialogue_content[7] = service_name
+                        dialogue_content[10].append(dialogue_content[2])
+                        dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
+                                                        log, service_name=service_name)
+                        pipes_dict[conv_id] = dialogue_content
+                        log.info(
+                            "multi round blur service and return faq answer cost: {}".format(
+                                str(time.time() - start_time)))
+                    else:
+                        options = get_related_title(dialogue_content[7])
+                        dialogue_content[9] += 2
+                        messageSender(conv_id=conv_id, msg="请选择与您相符的事项", log=log, options=options,
+                                      end=False)
+                        log.info("multi round same service with blur service and return answer cost: {}".format(
+                            str(time.time() - start_time)))
 
             else:
                 log.info("Different matter")
@@ -394,6 +409,7 @@ def process_msg(user_json):
                         return
             user_text = msg['content']
             options = []
+            log.info(str(dialogue_content[9]) + str(dialogue_content[6]))
             if 'text' in user_text.keys() and dialogue_content[9] != 1:
                 # IR
                 options = get_related_title(dialogue_content[2])
@@ -454,6 +470,7 @@ def process_msg(user_json):
                     else:
                         inform_slots = sentence
                     if dialogue_content[3] == 0:
+                        log.info("start sub process")
                         p = Process(target=simulation_epoch,
                                     args=(
                                         (user_pipe[1], response_pipe[0]), agent, parameter, log,
