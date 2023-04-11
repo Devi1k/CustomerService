@@ -13,3 +13,4 @@ gov/__pycache__/*
 utils/__pycache__/*
 utils/test/__pycache__/*
 normal/__pycache__/*
+/_trial_temp.lock

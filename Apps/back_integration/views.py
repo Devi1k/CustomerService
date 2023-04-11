@@ -32,6 +32,7 @@ word_dict = load_dict(os.path.join(parent_path, 'data/new_dict.txt'))
 stop_words = [i.strip() for i in open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                                    'data/baidu_stopwords.txt')).readlines()]
 positive_list = ['是的', '是', '没错', '对', '对的,', '嗯', 'sheji']
+hello_list = ["你好", "您好", "打扰了"]
 link_file = os.path.join(parent_path, 'data/link.json')
 with open(link_file, 'r') as f:
     link = json.load(f)
@@ -73,6 +74,10 @@ def process_msg(user_json):
     if 'content' in msg.keys():
         log.info("user message:" + msg['content']['text']) if 'text' in msg['content'].keys() else log.info(
             "user choice:" + msg['content']['service_name'])
+    if "content" in msg.keys() and "text" in msg["content"].keys() and msg["content"]["text"] in hello_list:
+        messageSender(conv_id=conv_id, log=log,
+                      msg="欢迎您使用北辰客服智能，我是您的智能助手小辰，负责事项、业务以及相关问题的咨询。有什么问题您尽管说。")
+        return
     try:
         if msg['content']['service_name'] is not None:
             start_time = time.time()
