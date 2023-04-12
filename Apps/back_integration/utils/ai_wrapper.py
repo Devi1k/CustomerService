@@ -25,7 +25,6 @@ with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 
 
 def get_item_content(first_utterance):
-    # todo：规则解决长事项以及部分短事项无法识别
     content_feature_list = ["怎么", "什么", "如何", "怎样"]
     for c in content_feature_list:
         if c in first_utterance:
@@ -181,7 +180,7 @@ def get_faq_from_service(first_utterance, service, history):
     utterance = first_utterance.replace("--", '-').replace(" ", "")
     seg_list = cut_sentence_remove_stopwords(sentence=utterance)
     for s in seg_list.copy():
-        if s in service and len(s) > 2:
+        if s in service and len(s) >= 2:
             seg_list.remove(s)
     utterance = ''.join(seg_list)
     utterance = re.sub("[\s++\.\!\/_,$%^*(+\"\')]+|[+——()?【】“”！，。？、~@#￥%……&*]+", "",

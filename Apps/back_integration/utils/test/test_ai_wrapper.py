@@ -12,9 +12,9 @@ class Test(TestCase):
     def test_get_faq_from_service(self):
         # score, answer, service = get_faq_from_service("需要第三方吗",
         #                                               "固定资产投资项目合理用能审查")  # add assertion here
-        sentence = "要办理什么证"
+        sentence = "我是少数民族姓名，能否申请护照加注"
 
-        service = "药品经营许可证核发（零售）-药品经营许可证核发、变更、换证（零售）-核发（延续）"
+        service = "普通护照签发、换发、补发及加注-护照加注"
 
         score, answer, service = get_faq_from_service(sentence,
                                                       service, history=[])  # add assertion here
@@ -29,7 +29,7 @@ class Test(TestCase):
 
 
     def test_get_faq(self):
-        text = "企业投资项目备案我的项目建设地址精确到XX街镇可以么"
+        text = "我想申请燃油补贴，什么条件"
         similar_score, answer, service = get_faq(text)
         print(similar_score, answer, service)
 

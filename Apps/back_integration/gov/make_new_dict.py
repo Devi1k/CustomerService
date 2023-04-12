@@ -1,6 +1,6 @@
 import json
 
-from ..gov.slot_config import requirement_weight
+from Apps.back_integration.gov.slot_config import requirement_weight
 
 requirement_all = []
 for i in range(len(requirement_weight)):
@@ -42,4 +42,22 @@ def generate_slot_set():
         json.dump(slot_set, f, indent=4, ensure_ascii=False)
 
 
+def generate_slot_max_weight():
+    slot_max_weight = dict()
+    slot_max = []
+    for i in range(len(requirement_weight)):
+        name = list(requirement_weight[i].keys())[1]
+        slot_max_weight[name] = 100
+        slot_max.append(name)
+    # for i in range(len(requirement_weight)):
+    #     for key, item in requirement_weight[i].items():
+    #         if 40 < item < 100:
+    #             slot_max.append(key)
+    #             slot_max_weight[key] = 100
+    with open('../data/slot_max_weight.json', 'w') as f:
+        json.dump(slot_max_weight, f, indent=4, ensure_ascii=False)
+    return slot_max
+
+
 generate_slot_set()
+generate_slot_max_weight()
