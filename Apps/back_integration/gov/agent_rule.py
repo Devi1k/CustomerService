@@ -61,9 +61,9 @@ class AgentRule(Agent):
         for i in range(len(self.slot_max)):
             for inform in inform_slots:
                 if inform in self.requirement_weight[i].keys():
-                    if state["current_slots"]["inform_slots"][inform] == True:
+                    if state["current_slots"]["inform_slots"][inform] is True:
                         score[i] += self.requirement_weight[i][inform]
-                    elif state["current_slots"]["inform_slots"][inform] == False:
+                    elif state["current_slots"]["inform_slots"][inform] is False:
                         score[i] -= self.requirement_weight[i][inform]
                 else:
                     pass
@@ -72,6 +72,7 @@ class AgentRule(Agent):
                 max = i
         candidate_service = self.service[max]
         candidate_requirement = self.slot_max[max]
+        print(candidate_requirement,max)
         self.agent_action["request_slots"].clear()
         self.agent_action["inform_slots"].clear()
         self.agent_action["turn"] = turn

@@ -97,21 +97,27 @@ def process_msg(user_json):
                 pipes_dict[conv_id] = dialogue_content
                 log.info("user choose service and return answer cost: {}".format(str(time.time() - start_time)))
                 return
-            elif service_name == '以上都不是' and dialogue_content[9] > 1:
-                dialogue_content[4] = True
-                dialogue_content[8] = "抱歉，未能找到您所需的事项。请问还有其他问题吗，如果有请继续提问。"
-                dialogue_content[7] = ""
-                dialogue_content[10] = []
-                messageSender(conv_id=conv_id, msg=dialogue_content[8], log=log,
-                              end=dialogue_content[4])
-                dialogue_content[6] = True
-                dialogue_content[2] = ""
-                # pipes_dict[conv_id][3].kill()
-                if dialogue_content[3] != 0:
-                    os.kill(dialogue_content[3], signal.SIGKILL)
-                log.info('process kill')
-                pipes_dict[conv_id] = dialogue_content
-                return
+            elif service_name == '以上都不是':
+                if dialogue_content[9] > 1:
+                    dialogue_content[4] = True
+                    dialogue_content[8] = "抱歉，未能找到您所需的事项。请问还有其他问题吗，如果有请继续提问。"
+                    dialogue_content[7] = ""
+                    dialogue_content[10] = []
+                    dialogue_content[9] = 0
+                    messageSender(conv_id=conv_id, msg=dialogue_content[8], log=log,
+                                  end=dialogue_content[4])
+                    dialogue_content[6] = True
+                    dialogue_content[2] = ""
+                    # pipes_dict[conv_id][3].kill()
+                    if dialogue_content[3] != 0:
+                        os.kill(dialogue_content[3], signal.SIGKILL)
+                    log.info('process kill')
+                    pipes_dict[conv_id] = dialogue_content
+                    return
+                elif dialogue_content[9] == 1:
+                    messageSender(conv_id=conv_id, msg="抱歉，我没太理解您的意思。请再补充一些细节呢。", log=log,
+                                  end=False)
+                    return
             elif service_name != '以上都不是' and dialogue_content[9] == 0:
                 start_time = time.time()
                 dialogue_content[2] = service_name.replace("--", "-")
@@ -296,85 +302,22 @@ def process_msg(user_json):
                             str(time.time() - start_time)))
 
                     else:
-                        try:
-                            sentence = user_text['text']
-                            seg_list = cut_sentence_remove_stopwords(sentence)
-                            inform_slots = replace_list(seg_list, word_dict, model=model,
-                                                        similarity_dict=similarity_dict)
-                            for i in range(len(inform_slots) - 1, -1, -1):
-                                if inform_slots[i] in stop_words:
-                                    del inform_slots[i]
-                            p.start()
-                            dialogue_content[3] = p.ident
-                            user_pipe[0].send(inform_slots)
-                        except OSError:
-                            # messageSender(conv_id=conv_id, msg="会话结束", log=log, end=True)
-                            return
-                        if user_text['text'] != dialogue_content[2]:
-                            dialogue_content[11] += user_text['text']
-                        recv = response_pipe[1].recv()
-                        # The message format of the model received from the model is
-                        """
-                        {
-                            "service": agent_action["inform_slots"]["service"] or ,   service为业务名
-                            "end_flag": episode_over  会话是否结束
-                        }
-                        """
-                        dialogue_content[4] = recv['end_flag']
-                        # Continue to input without ending
-                        if dialogue_content[4] is not True and recv['action'] == 'request':
-                            msg = "您询问的业务是否涉及" + recv['service'] + "，如若不涉及，请补充相关细节"
-                            dialogue_content[6] = False
-                            dialogue_content[8] = msg
-                            messageSender(conv_id=conv_id, msg=msg, log=log)
-                            pipes_dict[conv_id] = dialogue_content
-                            log.info("multi round different service and diagnose request cost: {}".format(
-                                str(time.time() - start_time)))
+                        dialogue_content[4] = True
+                        answer = "抱歉，未能找到您所需的事项。请问还有其他问题吗，如果有请继续提问。"
+                        dialogue_content[6] = True
+                        dialogue_content[10] = []
+                        # if dialogue_content[3] != 0:
+                        #     os.kill(dialogue_content[3], signal.SIGKILL)
+                        dialogue_content[2] = ""
+                        dialogue_content[9] = 0
 
-                        else:
-                            dialogue_content[4] = True
-                            dialogue_content[6] = True
-                            dialogue_content[3] = 0
-                            user_pipe[0].close()
-                            response_pipe[1].close()
-                            service_name = recv['service']
-                            dialogue_content[7] = service_name
-                            log.info("first_utterance: {}".format(dialogue_content[2]))
-                            log.info("service_name: {}".format(service_name))
-                            if item_content == "content":
-                                answer = get_answer(dialogue_content[2], service_name, log)
-                            else:
-                                answer = "您询问的业务属于:" + service_name
-                            business = get_business(first_utterance=dialogue_content[2])
-                            answer = answer + '\n' + '(' + dialogue_content[
-                                7] + '——' + business + ')'
-                            try:
-                                service_link = str(link[service_name])
-                            except KeyError:
-                                service_link = ""
-                            messageSender(conv_id=conv_id, msg=answer, log=log, link=service_link,
-                                          end=dialogue_content[4])
-                            dialogue_content[2] = ""
-                            if dialogue_content[3] != 0:
-                                os.kill(dialogue_content[3], signal.SIGKILL)
-                            log.info('process kill')
-                            dialogue_content[10].append(dialogue_content[2])
-                            recommend = get_recommend(service_name=dialogue_content[7],
-                                                      history=dialogue_content[10])
-                            if len(recommend) < 1:
-                                recommend = "请问还有其他问题吗，如果有请继续提问"
-                            dialogue_content[8] = recommend
-                            if isinstance(recommend, list):
-                                messageSender(conv_id=conv_id, msg="大家都在问", log=log, end=True,
-                                              service_name=service_name, options=recommend)
-                            else:
-                                messageSender(conv_id=conv_id, msg=recommend, log=log,
-                                              end=dialogue_content[4])
-                            dialogue_content[2] = ""
-                            dialogue_content[9] = 0
-                            pipes_dict[conv_id] = dialogue_content
-                            log.info("multi round different service and diagnose answer cost: {}".format(
-                                str(time.time() - start_time)))
+                        messageSender(conv_id=conv_id, log=log, msg=answer, end=False)
+                        dialogue_content[8] = "请问还有其他问题吗，如果有请继续提问"
+                        messageSender(conv_id=conv_id, msg="请问还有其他问题吗，如果有请继续提问", log=log,
+                                      end=True)
+                        pipes_dict[conv_id] = dialogue_content
+                        log.info("different service and diagnose failed with options cost: {}".format(
+                            str(time.time() - start_time)))
 
         #
         else:
@@ -414,10 +357,10 @@ def process_msg(user_json):
                         return
             user_text = msg['content']
             options = []
-            log.info(str(dialogue_content[9]) + str(dialogue_content[6]))
             if 'text' in user_text.keys() and dialogue_content[9] != 1:
                 # IR
                 options = get_related_title(dialogue_content[2])
+                print("442"+dialogue_content[2])
                 # 若对话内容包含的事项足够明确
                 business_threshold = 0.97
                 candidate_service = ""
@@ -460,96 +403,29 @@ def process_msg(user_json):
                     dialogue_content[6] = False
                     dialogue_content[9] += 1
                 if 'text' not in user_text.keys():
+                    log.info(dialogue_content[2])
                     user_text = {'text': dialogue_content[2]}
-                # start to diagnose
-                try:
-                    # 做分词归一化
-                    sentence = user_text['text']
-                    if sentence not in positive_list:
-                        seg_list = cut_sentence_remove_stopwords(sentence)
-                        inform_slots = replace_list(seg_list, word_dict, model=model,
-                                                    similarity_dict=similarity_dict)
-                        for i in range(len(inform_slots) - 1, -1, -1):
-                            if inform_slots[i] in stop_words:
-                                del inform_slots[i]
-                    else:
-                        inform_slots = sentence
-                    if dialogue_content[3] == 0:
-                        log.info("start sub process")
-                        p = Process(target=simulation_epoch,
-                                    args=(
-                                        (user_pipe[1], response_pipe[0]), agent, parameter, log,
-                                        similarity_dict,
-                                        conv_id))
-                        p.start()
-                        dialogue_content[3] = p.ident
-                    # 发给子进程诊断
-                    user_pipe[0].send(inform_slots)
-                except OSError:
-                    pass
-                    # messageSender(conv_id=conv_id, msg="会话结束", log=log)
-                    # continue
-                if user_text['text'] != dialogue_content[2]:
-                    dialogue_content[11] += user_text['text']
-                recv = response_pipe[1].recv()
-                # The message format of the model received from the model is
-                """
-                {
-                    "service": agent_action["inform_slots"]["service"] or ,   service为业务名
-                    "end_flag": episode_over  会话是否结束
-                }
-                """
-                dialogue_content[4] = recv['end_flag']
-                # Continue to input without ending
-                if dialogue_content[4] is not True and recv['action'] == 'request':
-                    msg = "您询问的业务是否涉及" + recv['service'] + "，如若不涉及，请补充相关细节"
-                    dialogue_content[8] = msg
+                options = get_related_title(dialogue_content[11])
+                dialogue_content[9] += 1
+                if len(options) > 0:
                     pipes_dict[conv_id] = dialogue_content
-                    messageSender(conv_id=conv_id, msg=msg, log=log)
-                    log.info("different service and diagnose request cost: {}".format(
-                        str(time.time() - start_time)))
-                elif dialogue_content[4] is True and recv['action'] == 'request' and user_text[
-                    'text'] not in positive_list:
-                    options = get_related_title(dialogue_content[11])
-                    # pipes_dict[conv_id][4] = True
-                    dialogue_content[9] += 1
-                    if len(options) > 0:
-                        pipes_dict[conv_id] = dialogue_content
-                        messageSender(conv_id=conv_id, log=log, options=options, end=False)
-                    else:
-                        answer = "抱歉，未能找到您所需的事项。请问还有其他问题吗，如果有请继续提问。"
-                        dialogue_content[6] = True
-                        dialogue_content[10] = []
-                        if dialogue_content[3] != 0:
-                            os.kill(dialogue_content[3], signal.SIGKILL)
-                        # log.info('process kill')
-                        dialogue_content[2] = ""
-                        dialogue_content[9] = 0
-
-                        messageSender(conv_id=conv_id, log=log, msg=answer, end=False)
-                        dialogue_content[8] = "请问还有其他问题吗，如果有请继续提问"
-                        messageSender(conv_id=conv_id, msg="请问还有其他问题吗，如果有请继续提问", log=log,
-                                      end=True)
-                        pipes_dict[conv_id] = dialogue_content
-                    log.info("different service and diagnose failed with options cost: {}".format(
-                        str(time.time() - start_time)))
-
+                    messageSender(conv_id=conv_id, log=log, options=options, end=False)
                 else:
                     dialogue_content[4] = True
+                    answer = "抱歉，未能找到您所需的事项。请问还有其他问题吗，如果有请继续提问。"
                     dialogue_content[6] = True
-                    dialogue_content[3] = 0
-                    service_name = recv['service']
-                    dialogue_content[7] = service_name
-                    dialogue_content[10].append(dialogue_content[2])
-                    log.info("first_utterance: {}".format(dialogue_content[2]))
-                    log.info("service_name: {}".format(service_name))
-                    dialogue_content = return_answer(dialogue_content=dialogue_content, conv_id=conv_id,
-                                                     service_name=service_name,
-                                                     log=log,
-                                                     link=link, item_content=item_content)
+                    dialogue_content[10] = []
+                    dialogue_content[2] = ""
+                    dialogue_content[9] = 0
+
+                    messageSender(conv_id=conv_id, log=log, msg=answer, end=False)
+                    dialogue_content[8] = "请问还有其他问题吗，如果有请继续提问"
+                    messageSender(conv_id=conv_id, msg="请问还有其他问题吗，如果有请继续提问", log=log,
+                                  end=True)
                     pipes_dict[conv_id] = dialogue_content
-                    log.info("different service and diagnose answer cost: {}".format(
-                        str(time.time() - start_time)))
+                log.info("different service and diagnose failed with options cost: {}".format(
+                    str(time.time() - start_time)))
+
 
     except Exception as e:
         log.error(e, exc_info=True)

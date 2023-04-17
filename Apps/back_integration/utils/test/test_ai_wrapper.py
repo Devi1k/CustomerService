@@ -12,9 +12,9 @@ class Test(TestCase):
     def test_get_faq_from_service(self):
         # score, answer, service = get_faq_from_service("需要第三方吗",
         #                                               "固定资产投资项目合理用能审查")  # add assertion here
-        sentence = "我是少数民族姓名，能否申请护照加注"
+        sentence = "我要办理机动车维修经营备案，需要什么条件"
 
-        service = "普通护照签发、换发、补发及加注-护照加注"
+        service = "机动车维修经营备案"
 
         score, answer, service = get_faq_from_service(sentence,
                                                       service, history=[])  # add assertion here

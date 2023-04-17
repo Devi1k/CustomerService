@@ -231,6 +231,7 @@ def return_answer(dialogue_content, conv_id, service_name, log, link, item_conte
                 similarity_score, answer, faq_service = get_faq_from_service(first_utterance=dialogue_content[2],
                                                                              service=service_name,
                                                                              history=dialogue_content[10])
+                log.info("faq:{},similarity_score:{}".format(answer, str(round(similarity_score, 2))))
                 if float(similarity_score) < 0.285:
                     answer = get_answer(first_utterance=dialogue_content[2], service_name=dialogue_content[7], log=log,
                                         intent_class=intent_class)
