@@ -210,7 +210,7 @@ def process_msg(user_json):
                                                                                   service=dialogue_content[7],
                                                                                   history=dialogue_content[10])
                     log.info(str(round(similarity_score, 2)) + "  " + answer)
-                    if similarity_score > 0.5:
+                    if similarity_score > 0.285:
                         # messageSender(conv_id=conv_id, msg=answer, log=log, end=True)
                         dialogue_content[7] = service_name
                         dialogue_content[10].append(dialogue_content[2])
