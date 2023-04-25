@@ -127,7 +127,7 @@ def process_msg(user_json):
 
                 similarity_score, answer, service_name = get_faq_from_service(
                     first_utterance=dialogue_content[2],
-                    service=dialogue_content[7], history=dialogue_content[10])
+                    service=dialogue_content[7], log=log)
                 dialogue_content[7] = service_name
                 messageSender(conv_id=conv_id, msg=answer, log=log, end=dialogue_content[4])
                 recommend = get_recommend(service_name=dialogue_content[7],
@@ -208,7 +208,7 @@ def process_msg(user_json):
                 else:
                     similarity_score, answer, service_name = get_faq_from_service(first_utterance=dialogue_content[2],
                                                                                   service=dialogue_content[7],
-                                                                                  history=dialogue_content[10])
+                                                                                  log=log)
                     log.info(str(round(similarity_score, 2)) + "  " + answer)
                     if similarity_score > 0.285:
                         # messageSender(conv_id=conv_id, msg=answer, log=log, end=True)
@@ -360,7 +360,7 @@ def process_msg(user_json):
             if 'text' in user_text.keys() and dialogue_content[9] != 1:
                 # IR
                 options = get_related_title(dialogue_content[2])
-                print("442"+dialogue_content[2])
+                print("442" + dialogue_content[2])
                 # 若对话内容包含的事项足够明确
                 business_threshold = 0.97
                 candidate_service = ""

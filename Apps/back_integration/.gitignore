@@ -4,7 +4,7 @@
 /log
 
 _trial_temp/*
-
+utils/test/test_data/
 .DS_Store
 gov/.DS_Store
 __pycache__/*

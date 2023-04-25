@@ -163,7 +163,7 @@ def faq_diagnose(answer, dialogue_content, conv_id, log, service_name=""):
     return dialogue_content
 
 
-def get_faq_from_service(first_utterance, service, history):
+def get_faq_from_service(first_utterance, service, log):
     """
 
     :rtype: float,str,str
@@ -183,11 +183,12 @@ def get_faq_from_service(first_utterance, service, history):
         if s in service and len(s) >= 2:
             seg_list.remove(s)
     utterance = ''.join(seg_list)
-    utterance = re.sub("[\s++\.\!\/_,$%^*(+\"\')]+|[+——()?【】“”！，。？、~@#￥%……&*]+", "",
+    utterance = re.sub("[\s+\.\!\/_,$%^*(+\"\')]+|[+——()?【】“”！，。？、~@#￥%……&*]+", "",
                        utterance)
     try:
         question_dict = new_recommend[service]
     except KeyError:
+        log.error("service not in question dict")
         return 0, "抱歉，无相关问题", service
     question_list = set()
     for k, v in question_dict.items():
@@ -230,7 +231,7 @@ def return_answer(dialogue_content, conv_id, service_name, log, link, item_conte
             if item_content == "content":
                 similarity_score, answer, faq_service = get_faq_from_service(first_utterance=dialogue_content[2],
                                                                              service=service_name,
-                                                                             history=dialogue_content[10])
+                                                                             log=log)
                 log.info("faq:{},similarity_score:{}".format(answer, str(round(similarity_score, 2))))
                 if float(similarity_score) < 0.285:
                     answer = get_answer(first_utterance=dialogue_content[2], service_name=dialogue_content[7], log=log,
@@ -268,11 +269,11 @@ def return_answer(dialogue_content, conv_id, service_name, log, link, item_conte
     return dialogue_content
 
 
-def get_multi_res(first_utterance, service_name, dialogue_content):
+def get_multi_res(first_utterance, service_name, log):
     similarity_score, answer, service_name = get_faq_from_service(
         first_utterance=first_utterance,
         service=service_name,
-        history=dialogue_content[10]
+        log=log
     )
     if float(similarity_score) > 0.285:
         return answer
