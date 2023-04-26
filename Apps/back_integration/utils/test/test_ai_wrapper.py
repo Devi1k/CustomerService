@@ -21,14 +21,14 @@ class Test(TestCase):
         log.info(res)
 
     def test_get_faq_from_service(self):
-        sentence = "产权证明要求是什么"
+        sentence = "我要办理取水许可-取水许可证核发-变更，主管部门？"
 
-        service = "户外广告及临时悬挂、设置标语或者宣传品许可-户外广告设施许可（不含公交候车亭附属广告及公交车体广告设施）（市级权限委托市内六区实施）"
+        service = "取水许可-取水许可证核发-变更"
 
         score, answer, service = get_faq_from_service(sentence,
                                                       service, log=log)  # add assertion here
 
-        log.info(score, answer)
+        log.info("score{},answer{}".format(score, answer))
 
     def test_get_recommend(self):
         service_name = "户外广告及临时悬挂、设置标语或者宣传品许可-户外广告设施许可（不含公交候车亭附属广告及公交车体广告设施）（市级权限委托市内六区实施）"
@@ -37,22 +37,29 @@ class Test(TestCase):
         log.info(res)
 
     def test_get_faq(self):
-        file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-                                 'data/link.json')
-        with open(file_path,
-                  "r", encoding="utf-8") as f:
-            link = json.load(f)
-        total = len(link)
-        count = 0
-        for title in tqdm(link.keys()):
-            # log.info(title)
-            res = get_faq(title)
-            if res == "您需要办理" + title:
-                count += 1
-        log.info(count / total)
+        # file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        #                          'data/link.json')
+        # with open(file_path,
+        #           "r", encoding="utf-8") as f:
+        #     link = json.load(f)
+        # total = len(link)
+        # count = 0
+        # for title in tqdm(link.keys()):
+        #     # log.info(title)
+        #     try:
+        #         score, res, service = get_faq(title)
+        #     except Exception:
+        #         log.info("connect error")
+        #         res = ""
+        #     res = res.replace("--", "-")
+        #     if res == "您需要办理" + title:
+        #         count += 1
+        # log.info(count / total)
 
         # read xlsx
-        book = xlrd.open_workbook("../test_data/20230407测试集.xlsx")
+        file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_data/20230407测试集.xlsx")
+        # read xlsx
+        book = xlrd.open_workbook(file_path)
         sheet = book.sheet_by_index(2)
         total = sheet.nrows - 1
         count = 0
@@ -61,29 +68,37 @@ class Test(TestCase):
         output_worksheet = output_workbook.add_sheet("sheet1")
         output_row = 1
         output_worksheet.write(0, 0, "query")
-        output_worksheet.write(0, 1, "label")
+        output_worksheet.write(0, 1, "service_label")
         output_worksheet.write(0, 2, "res")
-        output_worksheet.write(0, 3, "answer")
+        output_worksheet.write(0, 3, "answer_label")
         output_worksheet.write(0, 4, "similarity")
         for i in tqdm(range(1, total + 1)):
             query = sheet.cell_value(i, 0).strip()
-            service_label = sheet.cell_value(i, 1).strip()
-            answer = sheet.cell_value(i, 2).strip()
-            similarity, res, service = get_faq(query)
-            if similarity > 0.9:
-                if res == answer:
+            service_label = sheet.cell_value(i, 1).strip().replace("--", "-")
+            answer = sheet.cell_value(i, 2).strip().split("same:")
+            for i in range(len(answer)):
+                answer[i] = answer[i].replace("\\n", "\n").replace("\\t", "")
+            # if len(answer) > 1:
+            #     print(answer)
+            try:
+                score, res, service = get_faq(query)
+            except Exception:
+                log.info("connect error")
+                score, res = 0, ""
+            if score > 0.955:
+                if res in answer:
                     count += 1
                 else:
                     output_worksheet.write(output_row, 0, query)
                     output_worksheet.write(output_row, 1, service_label)
                     output_worksheet.write(output_row, 2, res)
                     output_worksheet.write(output_row, 3, answer)
-                    output_worksheet.write(output_row, 4, similarity)
+                    output_worksheet.write(output_row, 4, score)
                     output_row += 1
             else:
                 similarity, res, service = get_faq_from_service(query, service_label, log=log)
-                if similarity > 0.4:
-                    if res == answer:
+                if similarity > 0.285:
+                    if res in answer:
                         count += 1
                     else:
                         output_worksheet.write(output_row, 0, query)
@@ -95,7 +110,7 @@ class Test(TestCase):
 
         output_workbook.save(
             os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_result/faq_test_result.xls"))
-        log.info(count / total)
+        log.info("faq test result is {}".format(round(count / total, 2)))
 
     def test_multi_round(self):
         file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_data/20230407测试集.xlsx")

@@ -1,15 +1,8 @@
-import json
 import os
-import re
-import signal
-import time
-import warnings
-from json import JSONDecodeError
 from multiprocessing import Pipe, Process
 
 import gensim
 from django.http import JsonResponse
-
 from django.views.decorators.csrf import csrf_exempt
 
 from .conf.config import get_config
@@ -247,7 +240,7 @@ def process_msg(user_json):
                 log.info("item content:{}".format(item_content))
                 if item_content == "content":
                     similar_score, answer, service_name = get_faq(dialogue_content[2])
-                    if float(similar_score) > 0.97:
+                    if similar_score > 0.955:
                         dialogue_content[7] = service_name
                         dialogue_content[10].append(dialogue_content[2])
                         dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
@@ -345,7 +338,7 @@ def process_msg(user_json):
                 if item_content == "content":
                     similar_score, answer, service_name = get_faq(dialogue_content[2])
 
-                    if float(similar_score) > 0.97:
+                    if similar_score > 0.955:
                         dialogue_content[7] = service_name
                         dialogue_content[10].append(dialogue_content[2])
                         dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,

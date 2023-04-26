@@ -55,7 +55,7 @@ def get_faq(first_utterance, service=""):
         similar_score, answer, service = faq_res['Similarity_score'], faq_res['answer'], faq_res['service']
     except JSONDecodeError:
         similar_score, answer, service = 1, "抱歉，网络错误，请您重新尝试", ""
-    return similar_score, answer, service
+    return float(similar_score), answer, service
 
 
 # 业务
@@ -170,17 +170,20 @@ def get_faq_from_service(first_utterance, service, log):
     """
     from .word_match import cut_sentence_remove_stopwords
     syn_list = []
+    punctuation_list = ['，', ',', '？', '?']
     # print(syn_service.keys())
+    first_utterance = first_utterance.replace(service, "")
     if service in syn_service.keys():
         syn_list = syn_service[service]
         for s in syn_list:
             if s in first_utterance:
                 first_utterance = first_utterance.replace(s, "")
-        first_utterance = first_utterance.replace(service, "")
     utterance = first_utterance.replace("--", '-').replace(" ", "")
     seg_list = cut_sentence_remove_stopwords(sentence=utterance)
     for s in seg_list.copy():
         if s in service and len(s) >= 2:
+            seg_list.remove(s)
+        if s in punctuation_list:
             seg_list.remove(s)
     utterance = ''.join(seg_list)
     utterance = re.sub("[\s+\.\!\/_,$%^*(+\"\')]+|[+——()?【】“”！，。？、~@#￥%……&*]+", "",
@@ -204,13 +207,21 @@ def get_faq_from_service(first_utterance, service, log):
         _q = re.sub("[\s++\.\!\/_,$%^*(+\"\')]+|[+——()?【】“”！，。？、~@#￥%……&*]+", "",
                     q)
         num = 0
-        for s in seg_list:
-            if s in _q:
+        ques_word = cut_sentence_remove_stopwords(sentence=_q)
+        for _ques in ques_word:
+            if _ques in utterance:
                 num += 1
+        # for s in seg_list:
+        #     if s in _q:
+        #         num += 1
+        try:
+            num_ratio = num / len(seg_list)
+        except  ZeroDivisionError:
+            num_ratio = 0
         scoreT = Levenshtein.ratio(utterance, _q)
-        if num >= max_num and scoreT > max_score:
+        if num_ratio >= max_num and scoreT > max_score:
             max_score = scoreT
-            max_num = num
+            max_num = num_ratio
             candidate_ques = q
     for k, v in question_dict.items():
         if candidate_ques in v.keys() or (service + candidate_ques) in v.keys():

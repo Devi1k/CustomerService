@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'corsheaders',
-    # 'gunicorn',
+    'gunicorn',
     'Apps.back_integration.apps.BackIntegrationConfig',
     'Apps.ai_intent.apps.AiIntentConfig',
     'Apps.ai_matter_content.apps.AiMatterContentConfig',
