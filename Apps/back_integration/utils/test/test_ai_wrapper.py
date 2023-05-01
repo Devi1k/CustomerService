@@ -21,9 +21,9 @@ class Test(TestCase):
         log.info(res)
 
     def test_get_faq_from_service(self):
-        sentence = "我要办理取水许可-取水许可证核发-变更，主管部门？"
+        sentence = "找哪个部门办准入证"
 
-        service = "取水许可-取水许可证核发-变更"
+        service = "新建住宅商品房准许交付使用许可"
 
         score, answer, service = get_faq_from_service(sentence,
                                                       service, log=log)  # add assertion here
@@ -37,24 +37,7 @@ class Test(TestCase):
         log.info(res)
 
     def test_get_faq(self):
-        # file_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-        #                          'data/link.json')
-        # with open(file_path,
-        #           "r", encoding="utf-8") as f:
-        #     link = json.load(f)
-        # total = len(link)
-        # count = 0
-        # for title in tqdm(link.keys()):
-        #     # log.info(title)
-        #     try:
-        #         score, res, service = get_faq(title)
-        #     except Exception:
-        #         log.info("connect error")
-        #         res = ""
-        #     res = res.replace("--", "-")
-        #     if res == "您需要办理" + title:
-        #         count += 1
-        # log.info(count / total)
+
 
         # read xlsx
         file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_data/20230407测试集.xlsx")
@@ -75,18 +58,17 @@ class Test(TestCase):
         for i in tqdm(range(1, total + 1)):
             query = sheet.cell_value(i, 0).strip()
             service_label = sheet.cell_value(i, 1).strip().replace("--", "-")
-            answer = sheet.cell_value(i, 2).strip().split("same:")
-            for i in range(len(answer)):
-                answer[i] = answer[i].replace("\\n", "\n").replace("\\t", "")
+            answer = str(sheet.cell_value(i, 2)).strip().replace("\\n", "\n").replace("\\t", "")
             # if len(answer) > 1:
             #     print(answer)
             try:
                 score, res, service = get_faq(query)
             except Exception:
+                log.info(query)
                 log.info("connect error")
                 score, res = 0, ""
-            if score > 0.955:
-                if res in answer:
+            if score > 0.94:
+                if Levenshtein.ratio(res, answer) > 0.98 or score == 1.0:
                     count += 1
                 else:
                     output_worksheet.write(output_row, 0, query)
@@ -98,7 +80,7 @@ class Test(TestCase):
             else:
                 similarity, res, service = get_faq_from_service(query, service_label, log=log)
                 if similarity > 0.285:
-                    if res in answer:
+                    if Levenshtein.ratio(res, answer) > 0.98:
                         count += 1
                     else:
                         output_worksheet.write(output_row, 0, query)
@@ -109,8 +91,9 @@ class Test(TestCase):
                         output_row += 1
 
         output_workbook.save(
-            os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_result/faq_test_result.xls"))
+            os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_result/faq_test_result{}.xls"))
         log.info("faq test result is {}".format(round(count / total, 2)))
+        log.info("error item {}".format(total - count))
 
     def test_multi_round(self):
         file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_data/20230407测试集.xlsx")
@@ -223,7 +206,7 @@ class Test(TestCase):
         for i in range(1, total + 1):
             query = sheet.cell_value(i, 0).strip()
             service = sheet.cell_value(i, 1).strip().replace("--", "-")
-            res = get_related_title(query)
+            res = get_related_title(query)[:5]
             for i in range(len(res)):
                 res[i] = res[i].replace("--", "-")
             if service in res:

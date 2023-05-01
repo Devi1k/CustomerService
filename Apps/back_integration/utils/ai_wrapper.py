@@ -191,7 +191,7 @@ def get_faq_from_service(first_utterance, service, log):
     try:
         question_dict = new_recommend[service]
     except KeyError:
-        log.error("service not in question dict")
+        log.error("service not in question dict {}".format(service))
         return 0, "抱歉，无相关问题", service
     question_list = set()
     for k, v in question_dict.items():
@@ -204,19 +204,20 @@ def get_faq_from_service(first_utterance, service, log):
     # first_utterance = first_utterance.replace(service, "")
     max_num = 0
     for q in question_list:
+        ques_seg = cut_sentence_remove_stopwords(sentence=q)
+        for s in ques_seg.copy():
+            if s in service and len(s) >= 2:
+                ques_seg.remove(s)
+        ques = ''.join(ques_seg)
         _q = re.sub("[\s++\.\!\/_,$%^*(+\"\')]+|[+——()?【】“”！，。？、~@#￥%……&*]+", "",
-                    q)
+                    ques)
         num = 0
-        ques_word = cut_sentence_remove_stopwords(sentence=_q)
-        for _ques in ques_word:
-            if _ques in utterance:
+        for s in seg_list:
+            if s in _q:
                 num += 1
-        # for s in seg_list:
-        #     if s in _q:
-        #         num += 1
         try:
             num_ratio = num / len(seg_list)
-        except  ZeroDivisionError:
+        except ZeroDivisionError:
             num_ratio = 0
         scoreT = Levenshtein.ratio(utterance, _q)
         if num_ratio >= max_num and scoreT > max_score:
