@@ -59,9 +59,9 @@ def get_faq(first_utterance, service=""):
 
 
 # 业务
-def get_business(first_utterance):
-    business_path = "https://miner.picp.net/yewu?text={}"
-    res = requests.get(business_path.format(first_utterance), verify=False).json()
+def get_business(first_utterance, service_name):
+    business_path = "https://miner.picp.net/yewu?text={}&service_name={}"
+    res = requests.get(business_path.format(first_utterance, service_name), verify=False).json()
     return res['type']
 
 
@@ -254,7 +254,7 @@ def return_answer(dialogue_content, conv_id, service_name, log, link, item_conte
                 service_link = str(link[service_name])
             except KeyError:
                 service_link = ""
-            business = get_business(first_utterance=dialogue_content[2])
+            business = get_business(first_utterance=dialogue_content[2], service_name=dialogue_content[7])
             answer = answer + '\n' + '(' + service_name + '——' + business + ')'
         dialogue_content[10].append(dialogue_content[2])
         messageSender(conv_id=conv_id, msg=answer, log=log, link=service_link, end=True)
@@ -290,7 +290,7 @@ def get_multi_res(first_utterance, service_name, log):
     if float(similarity_score) > 0.285:
         return answer
     answer = get_retrieval(first_utterance=first_utterance, service_name=service_name)
-    business = get_business(first_utterance=first_utterance)
+    business = get_business(first_utterance=first_utterance, service_name=service_name)
     answer = answer + '\n' + '(' + service_name + '——' + business + ')'
     return answer
 

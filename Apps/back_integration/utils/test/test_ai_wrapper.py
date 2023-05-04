@@ -16,7 +16,7 @@ log = logging.getLogger()
 class Test(TestCase):
 
     def test_get_related_title(self):
-        sentence = "个人手机业务"
+        sentence = "水土保持方案的受理时间"
         res = get_related_title(sentence)
         log.info(res)
 
@@ -37,7 +37,6 @@ class Test(TestCase):
         log.info(res)
 
     def test_get_faq(self):
-
 
         # read xlsx
         file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_data/20230407测试集.xlsx")
@@ -173,11 +172,15 @@ class Test(TestCase):
         output_worksheet.write(0, 0, "query")
         output_worksheet.write(0, 1, "label")
         output_worksheet.write(0, 2, "result")
-        for i in range(1, total + 1):
+        for i in tqdm(range(1, total + 1)):
             query = sheet.cell_value(i, 0).strip()
-            label = sheet.cell_value(i, 1).strip()
-            res = get_business(query)
-            res = res if res != "业务不明" else "/"
+            service_name = sheet.cell_value(i, 1).strip()
+            label = sheet.cell_value(i, 2).strip()
+            try:
+                res = get_business(query, service_name)
+            except:
+                res = "网络错误"
+            res = res if res != "无匹配业务" else "/"
             if res == label:
                 count += 1
             else:
@@ -203,7 +206,7 @@ class Test(TestCase):
         output_worksheet.write(0, 0, "query")
         output_worksheet.write(0, 1, "label")
         output_worksheet.write(0, 2, "result")
-        for i in range(1, total + 1):
+        for i in tqdm(range(1, total + 1)):
             query = sheet.cell_value(i, 0).strip()
             service = sheet.cell_value(i, 1).strip().replace("--", "-")
             res = get_related_title(query)[:5]
