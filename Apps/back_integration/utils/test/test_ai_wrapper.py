@@ -16,7 +16,7 @@ log = logging.getLogger()
 class Test(TestCase):
 
     def test_get_related_title(self):
-        sentence = "水土保持方案的受理时间"
+        sentence = "如何处理残疾人证级别的变动？"
         res = get_related_title(sentence)
         log.info(res)
 
@@ -209,9 +209,9 @@ class Test(TestCase):
         for i in tqdm(range(1, total + 1)):
             query = sheet.cell_value(i, 0).strip()
             service = sheet.cell_value(i, 1).strip().replace("--", "-")
-            res = get_related_title(query)[:5]
-            for i in range(len(res)):
-                res[i] = res[i].replace("--", "-")
+            res = get_related_title(query)
+            for index in range(len(res)):
+                res[index] = res[index].replace("--", "-")
             if service in res:
                 count += 1
             else:
