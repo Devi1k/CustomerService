@@ -147,7 +147,7 @@ def process_msg(user_json):
             user_pipe, response_pipe = Pipe(), Pipe()
             log.info("new conv")
             pipes_dict[conv_id] = [user_pipe, response_pipe, "", 0, False, False, True,
-                                   "", "", 0, [], ""]
+                                   "", "", 0, []]
         # Handle multiple rounds of dialogues  Continue to speak
         elif conv_id in pipes_dict and pipes_dict[conv_id][5] is False and pipes_dict[conv_id][4] is True:
             start_time = time.time()
@@ -170,7 +170,6 @@ def process_msg(user_json):
                                              "",
                                              dialogue_content[2].replace("--", "-"))
             try:
-                print(dialogue_content[10])
                 prev_msg = ""
                 for msg in dialogue_content[10]:
                     if msg != "":
@@ -331,6 +330,12 @@ def process_msg(user_json):
                 dialogue_content[2] = re.sub("[\s++\.\!\/_$%^*]+|[+——()?【】“”、~@#￥%……&*]+|[0-9]+",
                                              "",
                                              dialogue_content[2].replace("--", "-"))
+            else:
+                if dialogue_content[9] == 1:
+                    try:
+                        dialogue_content[2] += msg['content']['text'].replace("--", "-")
+                    except KeyError:
+                        dialogue_content[2] += msg['content']['service_name'].replace("--", "-")
             # item content differ, if content get faq else judge multi round
             item_content = get_item_content(dialogue_content[2])
             log.info("item content:{}".format(item_content))
@@ -353,7 +358,6 @@ def process_msg(user_json):
             if 'text' in user_text.keys() and dialogue_content[9] != 1:
                 # IR
                 options = get_related_title(dialogue_content[2])
-                print("442" + dialogue_content[2])
                 # 若对话内容包含的事项足够明确
                 business_threshold = 0.97
                 candidate_service = ""
@@ -398,7 +402,7 @@ def process_msg(user_json):
                 if 'text' not in user_text.keys():
                     log.info(dialogue_content[2])
                     user_text = {'text': dialogue_content[2]}
-                options = get_related_title(dialogue_content[11])
+                options = get_related_title(dialogue_content[2])
                 dialogue_content[9] += 1
                 if len(options) > 0:
                     pipes_dict[conv_id] = dialogue_content
