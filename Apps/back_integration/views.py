@@ -122,6 +122,8 @@ def process_msg(user_json):
                     first_utterance=dialogue_content[2],
                     service=dialogue_content[7], log=log)
                 dialogue_content[7] = service_name
+                prefix = "您咨询的与事项" + service_name + "相关。具体内容如下：\n"
+                answer = prefix + answer
                 messageSender(conv_id=conv_id, msg=answer, log=log, end=dialogue_content[4])
                 recommend = get_recommend(service_name=dialogue_content[7],
                                           history=dialogue_content[10])

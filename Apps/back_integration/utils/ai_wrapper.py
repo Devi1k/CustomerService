@@ -138,7 +138,8 @@ def faq_diagnose(answer, dialogue_content, conv_id, log, service_name=""):
     # 对话状态设置
     dialogue_content[4] = True
     dialogue_content[6] = True
-
+    prefix = "您咨询的与事项" + dialogue_content[7] + "相关。具体内容如下：\n"
+    answer = prefix + answer
     messageSender(conv_id=conv_id, msg=answer, log=log, end=dialogue_content[4])
 
     dialogue_content[2] = ""
@@ -288,6 +289,8 @@ def get_multi_res(first_utterance, service_name, log):
         log=log
     )
     if float(similarity_score) > 0.285:
+        prefix = "您咨询的与事项" + service_name + "相关"
+        answer = prefix + answer
         return answer
     answer = get_retrieval(first_utterance=first_utterance, service_name=service_name)
     business = get_business(first_utterance=first_utterance, service_name=service_name)
