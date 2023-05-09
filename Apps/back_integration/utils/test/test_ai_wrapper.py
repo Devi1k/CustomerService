@@ -16,14 +16,14 @@ log = logging.getLogger()
 class Test(TestCase):
 
     def test_get_related_title(self):
-        sentence = "如何处理残疾人证级别的变动？"
+        sentence = "开日化店，需要办理什么手续？"
         res = get_related_title(sentence)
         log.info(res)
 
     def test_get_faq_from_service(self):
-        sentence = "找哪个部门办准入证"
+        sentence = "几天可以办下来"
 
-        service = "新建住宅商品房准许交付使用许可"
+        service = "公共场所卫生许可-设立"
 
         score, answer, service = get_faq_from_service(sentence,
                                                       service, log=log)  # add assertion here

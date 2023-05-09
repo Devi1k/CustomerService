@@ -25,7 +25,7 @@ with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 
 
 def get_item_content(first_utterance):
-    content_feature_list = ["怎么", "什么", "如何", "怎样"]
+    content_feature_list = ["怎么", "什么", "如何", "怎样", "几"]
     for c in content_feature_list:
         if c in first_utterance:
             return "content"
