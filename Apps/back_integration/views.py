@@ -93,7 +93,7 @@ def process_msg(user_json):
             elif service_name == '以上都不是':
                 if dialogue_content[9] > 1:
                     dialogue_content[4] = True
-                    dialogue_content[8] = "抱歉，未能找到您所需的事项。请问还有其他问题吗，如果有请继续提问。"
+                    dialogue_content[8] = "抱歉，小辰未能根据您的描述找到相关事项和答案，请您重新描述一下你所需要办理的事项或问题。"
                     dialogue_content[7] = ""
                     dialogue_content[10] = []
                     dialogue_content[9] = 0
@@ -108,7 +108,9 @@ def process_msg(user_json):
                     pipes_dict[conv_id] = dialogue_content
                     return
                 elif dialogue_content[9] == 1:
-                    messageSender(conv_id=conv_id, msg="抱歉，我没太理解您的意思。请再补充一些细节呢。", log=log,
+                    messageSender(conv_id=conv_id,
+                                  msg="非常抱歉，未能提供您想要的事项信息，请您进一步描您需要办理的事项相关的关键词或业务，小辰再次帮您查找一下。",
+                                  log=log,
                                   end=False)
                     return
             elif service_name != '以上都不是' and dialogue_content[9] == 0:
@@ -297,7 +299,7 @@ def process_msg(user_json):
 
                     else:
                         dialogue_content[4] = True
-                        answer = "抱歉，未能找到您所需的事项。请问还有其他问题吗，如果有请继续提问。"
+                        answer = "抱歉，小辰未能根据您的描述找到相关事项和答案，请您重新描述一下你所需要办理的事项或问题。"
                         dialogue_content[6] = True
                         dialogue_content[10] = []
                         # if dialogue_content[3] != 0:
@@ -411,7 +413,7 @@ def process_msg(user_json):
                     messageSender(conv_id=conv_id, log=log, options=options, end=False)
                 else:
                     dialogue_content[4] = True
-                    answer = "抱歉，未能找到您所需的事项。请问还有其他问题吗，如果有请继续提问。"
+                    answer = "抱歉，小辰未能根据您的描述找到相关事项和答案，请您重新描述一下你所需要办理的事项或问题。"
                     dialogue_content[6] = True
                     dialogue_content[10] = []
                     dialogue_content[2] = ""

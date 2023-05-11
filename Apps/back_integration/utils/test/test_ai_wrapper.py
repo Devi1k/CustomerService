@@ -16,7 +16,7 @@ log = logging.getLogger()
 class Test(TestCase):
 
     def test_get_related_title(self):
-        sentence = "开日化店，需要办理什么手续？"
+        sentence = "我要办理食品生产许可-食品（不含保健食品）生产许可证核发、变更、延续（按区级权限实施）-核发，需要什么条件？"
         res = get_related_title(sentence)
         log.info(res)
 
