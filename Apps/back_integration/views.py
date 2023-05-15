@@ -189,10 +189,11 @@ def process_msg(user_json):
                 log.info("Same matter.")
                 dialogue_content[4] = True
                 dialogue_content[6] = True
+                print(dialogue_content[7])
+                item_content = get_item_content(dialogue_content[2])
+                log.info("item content:{}".format(item_content))
                 if dialogue_content[7] not in blur_service.keys():
-                    item_content = get_item_content(dialogue_content[2])
                     dialogue_content[10].append(dialogue_content[2])
-                    log.info("item content:{}".format(item_content))
                     dialogue_content = return_answer(dialogue_content=dialogue_content, conv_id=conv_id,
                                                      service_name=dialogue_content[7],
                                                      log=log,
@@ -202,20 +203,22 @@ def process_msg(user_json):
                     log.info("same service and return answer cost: {}".format(str(time.time() - start_time)))
 
                 else:
-                    similarity_score, answer, service_name = get_faq_from_service(first_utterance=dialogue_content[2],
-                                                                                  service=dialogue_content[7],
-                                                                                  log=log)
-                    log.info(str(round(similarity_score, 2)) + "  " + answer)
-                    if similarity_score > 0.285:
-                        # messageSender(conv_id=conv_id, msg=answer, log=log, end=True)
-                        dialogue_content[7] = service_name
-                        dialogue_content[10].append(dialogue_content[2])
-                        dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
-                                                        log, service_name=service_name)
-                        pipes_dict[conv_id] = dialogue_content
-                        log.info(
-                            "multi round blur service and return faq answer cost: {}".format(
-                                str(time.time() - start_time)))
+                    if item_content == "content":
+                        similarity_score, answer, service_name = get_faq_from_service(
+                            first_utterance=dialogue_content[2],
+                            service=dialogue_content[7],
+                            log=log)
+                        log.info(str(round(similarity_score, 2)) + "  " + answer)
+                        if similarity_score > 0.285:
+                            # messageSender(conv_id=conv_id, msg=answer, log=log, end=True)
+                            dialogue_content[7] = service_name
+                            dialogue_content[10].append(dialogue_content[2])
+                            dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
+                                                            log, service_name=service_name)
+                            pipes_dict[conv_id] = dialogue_content
+                            log.info(
+                                "multi round blur service and return faq answer cost: {}".format(
+                                    str(time.time() - start_time)))
                     else:
                         options = get_related_title(dialogue_content[7])
                         dialogue_content[9] += 2
@@ -298,19 +301,19 @@ def process_msg(user_json):
                             str(time.time() - start_time)))
 
                     else:
-                        dialogue_content[4] = True
+                        dialogue_content[4] = False
                         answer = "抱歉，小辰未能根据您的描述找到相关事项和答案，请您重新描述一下你所需要办理的事项或问题。"
-                        dialogue_content[6] = True
-                        dialogue_content[10] = []
+                        # dialogue_content[6] = True
+                        # dialogue_content[10] = []
                         # if dialogue_content[3] != 0:
                         #     os.kill(dialogue_content[3], signal.SIGKILL)
-                        dialogue_content[2] = ""
-                        dialogue_content[9] = 0
+                        # dialogue_content[2] = ""
+                        # dialogue_content[9] = 0
 
                         messageSender(conv_id=conv_id, log=log, msg=answer, end=False)
-                        dialogue_content[8] = "请问还有其他问题吗，如果有请继续提问"
-                        messageSender(conv_id=conv_id, msg="请问还有其他问题吗，如果有请继续提问", log=log,
-                                      end=True)
+                        # dialogue_content[8] = "请问还有其他问题吗，如果有请继续提问"
+                        # messageSender(conv_id=conv_id, msg="请问还有其他问题吗，如果有请继续提问", log=log,
+                        #               end=True)
                         pipes_dict[conv_id] = dialogue_content
                         log.info("different service and diagnose failed with options cost: {}".format(
                             str(time.time() - start_time)))
@@ -390,19 +393,25 @@ def process_msg(user_json):
                     log.info("different service with high similarity service and return answer cost: {}".format(
                         str(time.time() - start_time)))
                     return
-            if dialogue_content[6] and len(options) > 0:
+            if dialogue_content[6]:
                 dialogue_content[6] = False
                 dialogue_content[9] += 1
-                dialogue_content[8] = options
-                dialogue_content[4] = False
-                pipes_dict[conv_id] = dialogue_content
-                messageSender(conv_id=conv_id, log=log, options=options, end=False)
-                log.info("multi round different service and return related service cost: {}".format(
-                    str(time.time() - start_time)))
+                if len(options) > 0:
+                    dialogue_content[8] = options
+                    dialogue_content[4] = False
+                    pipes_dict[conv_id] = dialogue_content
+                    messageSender(conv_id=conv_id, log=log, options=options, end=False)
+                    log.info("multi round different service and return related service cost: {}".format(
+                        str(time.time() - start_time)))
+                else:
+                    answer = "抱歉，小辰未能根据您的描述找到相关事项和答案，请您重新描述一下你所需要办理的事项或问题。"
+                    messageSender(conv_id=conv_id, log=log, msg=answer, end=False)
+                    return
+
             else:
-                if dialogue_content[6]:
-                    dialogue_content[6] = False
-                    dialogue_content[9] += 1
+                # if dialogue_content[6]:
+                #     dialogue_content[6] = False
+                #     dialogue_content[9] += 1
                 if 'text' not in user_text.keys():
                     log.info(dialogue_content[2])
                     user_text = {'text': dialogue_content[2]}
@@ -413,7 +422,7 @@ def process_msg(user_json):
                     messageSender(conv_id=conv_id, log=log, options=options, end=False)
                 else:
                     dialogue_content[4] = True
-                    answer = "抱歉，小辰未能根据您的描述找到相关事项和答案，请您重新描述一下你所需要办理的事项或问题。"
+                    answer = "非常抱歉，未能提供您想要的事项信息，请您进一步描您需要办理的事项相关的关键词或业务，小辰再次帮您查找一下。"
                     dialogue_content[6] = True
                     dialogue_content[10] = []
                     dialogue_content[2] = ""

@@ -21,9 +21,9 @@ class Test(TestCase):
         log.info(res)
 
     def test_get_faq_from_service(self):
-        sentence = "几天可以办下来"
+        sentence = "我要办理"
 
-        service = "公共场所卫生许可-设立"
+        service = "实施中等及中等以下学历教育、学前教育、自学考试助学和实施高等以下非学历文化教育的民办学校的筹设、设立、变更与终止的许可"
 
         score, answer, service = get_faq_from_service(sentence,
                                                       service, log=log)  # add assertion here
