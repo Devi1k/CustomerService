@@ -246,7 +246,7 @@ def process_msg(user_json):
                 log.info("item content:{}".format(item_content))
                 if item_content == "content":
                     similar_score, answer, service_name = get_faq(dialogue_content[2])
-                    if similar_score > 0.955:
+                    if similar_score > 0.94:
                         dialogue_content[7] = service_name
                         dialogue_content[10].append(dialogue_content[2])
                         dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
@@ -344,13 +344,14 @@ def process_msg(user_json):
                     except KeyError:
                         dialogue_content[2] += msg['content']['service_name'].replace("--", "-")
             # item content differ, if content get faq else judge multi round
+            log.info(dialogue_content[2])
             item_content = get_item_content(dialogue_content[2])
             log.info("item content:{}".format(item_content))
             if dialogue_content[6] is True:
                 if item_content == "content":
                     similar_score, answer, service_name = get_faq(dialogue_content[2])
 
-                    if similar_score > 0.955:
+                    if similar_score > 0.94:
                         dialogue_content[7] = service_name
                         dialogue_content[10].append(dialogue_content[2])
                         dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,

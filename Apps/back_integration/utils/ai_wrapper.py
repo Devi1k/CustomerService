@@ -81,6 +81,8 @@ def get_nli(first_utterance, service_name):
 
 # 进入对话后的检索事项
 def get_related_title(first_utterance):
+    if first_utterance == "":
+        return []
     from ..utils.word_match import cut_sentence_remove_stopwords
     first_utterance = ''.join(cut_sentence_remove_stopwords(first_utterance, category="ir"))
     title_path = "https://burninghell.xicp.net/getRelatedTitle/ver2?query={}"
@@ -140,6 +142,7 @@ def faq_diagnose(answer, dialogue_content, conv_id, log, service_name=""):
     dialogue_content[6] = True
     prefix = "您咨询的与事项" + dialogue_content[7] + "相关。具体内容如下：\n"
     answer = prefix + answer
+    answer = answer + '\n' + '(' + service_name + '——' + "常见问题" + ')'
     messageSender(conv_id=conv_id, msg=answer, log=log, end=dialogue_content[4])
 
     dialogue_content[2] = ""
@@ -241,6 +244,7 @@ def return_answer(dialogue_content, conv_id, service_name, log, link, item_conte
             answer = "抱歉，出现未知错误"
             service_link = ""
         else:
+            business = get_business(first_utterance=dialogue_content[2], service_name=dialogue_content[7])
             if item_content == "content":
                 similarity_score, answer, faq_service = get_faq_from_service(first_utterance=dialogue_content[2],
                                                                              service=service_name,
@@ -249,14 +253,15 @@ def return_answer(dialogue_content, conv_id, service_name, log, link, item_conte
                 if float(similarity_score) < 0.285:
                     answer = get_answer(first_utterance=dialogue_content[2], service_name=dialogue_content[7], log=log,
                                         intent_class=intent_class)
+                answer = answer + '\n' + '(' + service_name + '——' + business + ')'
+                prefix = "您咨询的与事项" + dialogue_content[7] + "相关。具体内容如下：\n"
+                answer = prefix + answer
             else:
                 answer = "您询问的业务属于:" + service_name
             try:
                 service_link = str(link[service_name])
             except KeyError:
                 service_link = ""
-            business = get_business(first_utterance=dialogue_content[2], service_name=dialogue_content[7])
-            answer = answer + '\n' + '(' + service_name + '——' + business + ')'
         dialogue_content[10].append(dialogue_content[2])
         messageSender(conv_id=conv_id, msg=answer, log=log, link=service_link, end=True)
         dialogue_content[4] = True
@@ -291,6 +296,7 @@ def get_multi_res(first_utterance, service_name, log):
     if float(similarity_score) > 0.285:
         prefix = "您咨询的与事项" + service_name + "相关"
         answer = prefix + answer
+        answer = answer + '\n' + '(' + service_name + '——' + "常见问题" + ')'
         return answer
     answer = get_retrieval(first_utterance=first_utterance, service_name=service_name)
     business = get_business(first_utterance=first_utterance, service_name=service_name)
