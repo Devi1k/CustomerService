@@ -1,14 +1,13 @@
-import json
+import os
 import os
 import time
 
 import numpy as np
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-
 import onnxruntime as ort
 import torch
-from transformers import BertTokenizer, AutoTokenizer, AlbertForSequenceClassification
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from transformers import AutoTokenizer
 
 from Apps.ai_multiround.utils.logger import Logger, clean_log
 
@@ -18,7 +17,7 @@ mapper_list = ["true", "false"]
 model_name = "multiround.bin"
 log.info(ort.__version__)
 log.info(ort.get_device())
-sess = ort.InferenceSession(os.getcwd() + "/Apps/ai_multiround/model/multiround.onnx",
+sess = ort.InferenceSession(os.getcwd() + "/Apps/ai_multiround/model/0426multiround.onnx",
                             providers=['CUDAExecutionProvider'])
 
 def to_numpy(tensor):

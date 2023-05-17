@@ -136,14 +136,18 @@ def get_answer(first_utterance, service_name, log, intent_class=''):
         pass
 
 
-def faq_diagnose(answer, dialogue_content, conv_id, log, service_name=""):
+def faq_diagnose(answer, dialogue_content, conv_id, log, link, service_name=""):
     # 对话状态设置
     dialogue_content[4] = True
     dialogue_content[6] = True
     prefix = "您咨询的与事项" + dialogue_content[7] + "相关。具体内容如下：\n"
     answer = prefix + answer
     answer = answer + '\n' + '(' + service_name + '——' + "常见问题" + ')'
-    messageSender(conv_id=conv_id, msg=answer, log=log, end=dialogue_content[4])
+    try:
+        service_link = str(link[service_name])
+    except KeyError:
+        service_link = ""
+    messageSender(conv_id=conv_id, msg=answer, log=log, link=service_link, end=dialogue_content[4])
 
     dialogue_content[2] = ""
     if dialogue_content[3] != 0:

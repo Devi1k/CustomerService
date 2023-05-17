@@ -3,12 +3,11 @@ import os
 import time
 
 import numpy as np
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-
 # Create your views here.
 import onnxruntime as ort
 import torch
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from transformers import BertTokenizer
 
 from Apps.ai_matter_content.dataloader import Dataloader
@@ -25,7 +24,7 @@ dataloader = Dataloader(intent_vocab=intent_vocab,
                         pretrained_weights=config['model']['pretrained_weights'])
 log.info(ort.__version__)
 log.info(ort.get_device())
-sess = ort.InferenceSession(os.getcwd() + "/Apps/ai_matter_content/model/matter_content.onnx",
+sess = ort.InferenceSession(os.getcwd() + "/Apps/ai_matter_content/model/0505matter_content.onnx",
                             providers=['CUDAExecutionProvider'])
 
 

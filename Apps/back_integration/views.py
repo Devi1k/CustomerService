@@ -214,7 +214,7 @@ def process_msg(user_json):
                             dialogue_content[7] = service_name
                             dialogue_content[10].append(dialogue_content[2])
                             dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
-                                                            log, service_name=service_name)
+                                                            log, service_name=service_name, link=link)
                             pipes_dict[conv_id] = dialogue_content
                             log.info(
                                 "multi round blur service and return faq answer cost: {}".format(
@@ -249,8 +249,9 @@ def process_msg(user_json):
                     if similar_score > 0.94:
                         dialogue_content[7] = service_name
                         dialogue_content[10].append(dialogue_content[2])
+
                         dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
-                                                        log, service_name=service_name)
+                                                        log, link=link, service_name=service_name)
                         pipes_dict[conv_id] = dialogue_content
                         log.info(
                             "multi round different service and return faq answer cost: {}".format(
@@ -355,7 +356,7 @@ def process_msg(user_json):
                         dialogue_content[7] = service_name
                         dialogue_content[10].append(dialogue_content[2])
                         dialogue_content = faq_diagnose(answer, dialogue_content, conv_id,
-                                                        log, service_name=service_name)
+                                                        log, link=link, service_name=service_name)
                         pipes_dict[conv_id] = dialogue_content
                         log.info(
                             "different service and return faq answer cost: {}".format(str(time.time() - start_time)))
