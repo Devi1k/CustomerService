@@ -7,6 +7,7 @@ import xlwt
 from tqdm import tqdm
 
 from ..ai_wrapper import *
+from ..word_match import longestCommonSubsequence, lev, sigmoid
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - File \"%(name)s/%(filename)s\" - line %(lineno)s - %(levelname)s - %(message)s')
@@ -21,9 +22,9 @@ class Test(TestCase):
         log.info(res)
 
     def test_get_faq_from_service(self):
-        sentence = "我要办理"
+        sentence = "我要办理设置医疗机构许可和执业登记，是一次办事项吗"
 
-        service = "实施中等及中等以下学历教育、学前教育、自学考试助学和实施高等以下非学历文化教育的民办学校的筹设、设立、变更与终止的许可"
+        service = "设置医疗机构许可和执业登记、变更-设置医疗机构许可-设置内资医疗机构许可"
 
         score, answer, service = get_faq_from_service(sentence,
                                                       service, log=log)  # add assertion here
@@ -39,10 +40,10 @@ class Test(TestCase):
     def test_get_faq(self):
 
         # read xlsx
-        file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_data/20230407测试集.xlsx")
+        file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_data/20230504测试集.xlsx")
         # read xlsx
         book = xlrd.open_workbook(file_path)
-        sheet = book.sheet_by_index(2)
+        sheet = book.sheet_by_index(1)
         total = sheet.nrows - 1
         count = 0
         # export to xlsx
@@ -224,6 +225,41 @@ class Test(TestCase):
             os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_result/retrieval_test_result.xls"))
         log.info("retrieval test result is {}".format(round(count / total, 2)))
 
+    def test_auto_bussiness(self):
+        # query_list = ["残疾人家庭设施无障碍改造申请时间",""]
+        file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test_data/20230504测试集.xlsx")
+        # read xlsx
+        book = xlrd.open_workbook(file_path)
+        sheet = book.sheet_by_index(4)
+        total = sheet.nrows - 1
+        count = 0
+        max_score = 0
+        for i in tqdm(range(1, total + 1)):
+            query = sheet.cell_value(i, 0).strip()
+            service = sheet.cell_value(i, 1).strip().replace("--", "-")
+            # for query in query_list:
+            options = get_related_title(query)
+            # 若对话内容包含的事项足够明确
+            business_threshold = 0.90
+            candidate_service = ""
+            for o in options:
+                lcs = longestCommonSubsequence(query, o)
+                if lcs <= 2:
+                    continue
+                distance = lev(query, o, True, True)
+                distance = sigmoid(distance + lcs / len(o))
+                if max_score < distance:
+                    max_score = distance
+                    candidate_service = o
+            candidate_service = candidate_service.replace("--", "-")
+            if max_score > business_threshold:
+                if candidate_service == service:
+                    count += 1
+                else:
+                    print("match failed label:{},result:{}".format(service, candidate_service))
+            else:
+                print("match failed")
+        print(count / total)
 
 if __name__ == "__main__":
     t1 = Test()
