@@ -116,9 +116,9 @@ def get_answer(first_utterance, service_name, log, intent_class=''):
 
 
         # 业务推理
-        elif intent_class == "NLI":  # --NLI
-            answer = get_nli(first_utterance, service_name)
-            log.info("NLI:{} ".format(answer))
+        # elif intent_class == "NLI":  # --NLI
+        #     answer = get_nli(first_utterance, service_name)
+        #     log.info("NLI:{} ".format(answer))
 
         # 文档检索
         elif intent_class == "IR":  # --IR
