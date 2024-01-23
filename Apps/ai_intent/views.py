@@ -5,7 +5,6 @@ from time import strftime, gmtime
 
 import numpy as np
 import onnxruntime as ort
-
 from django.http import JsonResponse
 # Create your views here.
 from django.views.decorators.csrf import csrf_exempt
@@ -43,10 +42,10 @@ def build_predict_text_raw(text, context=None):
 def build_predict_text(text):
     pad_batch = build_predict_text_raw(text)
     # pad_batch = tuple(t.to("gpu:0") for t in pad_batch)
-    word_seq_tensor, intent_tensor, word_mask_tensor, context_seq_tensor, context_mask_tensor = pad_batch
+    word_seq_tensor, intent_tensor, word_mask_tensor, word_token_type_ids, context_seq_tensor, context_mask_tensor = pad_batch
     intent_tensor = None
     context_seq_tensor, context_mask_tensor = None, None
-    return word_seq_tensor, intent_tensor, word_mask_tensor, context_seq_tensor, context_mask_tensor
+    return word_seq_tensor, intent_tensor, word_mask_tensor, word_token_type_ids, context_seq_tensor, context_mask_tensor
 
 
 def to_numpy(tensor):
@@ -54,11 +53,12 @@ def to_numpy(tensor):
 
 
 def infer_onnx(sess, utterance):
-    word_seq_tensor, intent_tensor, word_mask_tensor, context_seq_tensor, context_mask_tensor = build_predict_text(
+    word_seq_tensor, intent_tensor, word_mask_tensor, word_token_type_ids, context_seq_tensor, context_mask_tensor = build_predict_text(
         utterance)
-    input = {
-        'word_seq_tensor': to_numpy(word_seq_tensor),
-        'word_mask_tensor': to_numpy(word_mask_tensor),
+    model_input = {
+        'input_ids': to_numpy(word_seq_tensor),
+        'attention_mask': to_numpy(word_mask_tensor),
+        'token_type_ids': to_numpy(word_token_type_ids)
     }
 
     def get_output_name(onnx_session):
@@ -74,7 +74,7 @@ def infer_onnx(sess, utterance):
 
     # input_name = sess.get_inputs()[0].name
     out_name = get_output_name(sess)
-    intent = sess.run(out_name, input)
+    intent = sess.run(out_name, model_input)
     intent_index = np.argmax(intent)
     return dataloader.id2intent[intent_index]
 
@@ -83,8 +83,9 @@ log.info('model loading')
 project_path = os.getcwd() + "/Apps/ai_intent/"
 intent_vocab = json.load(open(project_path + 'processed_data/intent_vocab.json'))
 
+model_path = "/home/l/CustomerService/chinese-bert-wwm-ext"
 dataloader = Dataloader(intent_vocab=intent_vocab,
-                        pretrained_weights="hfl/chinese-bert-wwm-ext")
+                        pretrained_weights=model_path)
 log.info(ort.__version__)
 log.info(ort.get_device())
 sess = ort.InferenceSession(project_path + 'output/ai_intent.onnx', providers=['CUDAExecutionProvider'])

@@ -24,7 +24,7 @@ dataloader = Dataloader(intent_vocab=intent_vocab,
                         pretrained_weights=config['model']['pretrained_weights'])
 log.info(ort.__version__)
 log.info(ort.get_device())
-sess = ort.InferenceSession(os.getcwd() + "/Apps/ai_matter_content/model/0505matter_content.onnx",
+sess = ort.InferenceSession(os.getcwd() + "/Apps/ai_matter_content/model/matter_content.onnx",
                             providers=['CUDAExecutionProvider'])
 
 

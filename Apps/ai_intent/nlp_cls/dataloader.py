@@ -119,6 +119,7 @@ class Dataloader:
         max_seq_len = min(max([len(x[-2]) for x in batch_data]) + 2, 50)
         word_mask_tensor = torch.zeros((batch_size, max_seq_len), dtype=torch.long)
         word_seq_tensor = torch.zeros((batch_size, max_seq_len), dtype=torch.long)
+        word_token_type_ids = torch.zeros((batch_size, max_seq_len), dtype=torch.long)
         # tag_mask_tensor = torch.zeros((batch_size, max_seq_len), dtype=torch.long)
         # tag_seq_tensor = torch.zeros((batch_size, max_seq_len), dtype=torch.long)
         intent_tensor = torch.zeros((batch_size, 1), dtype=torch.float)
@@ -135,6 +136,7 @@ class Dataloader:
             word_seq_tensor[i, :sen_len] = torch.LongTensor([indexed_tokens])
             # tag_seq_tensor[i, 1:sen_len-1] = torch.LongTensor(tags)
             word_mask_tensor[i, :sen_len] = torch.LongTensor([1] * sen_len)
+            word_token_type_ids[i, :sen_len] = torch.LongTensor([0] * sen_len)
             # tag_mask_tensor[i, 1:sen_len-1] = torch.LongTensor([1] * (sen_len-2))
             for j in intents:
                 intent_tensor[i] = j
@@ -142,7 +144,7 @@ class Dataloader:
             context_seq_tensor[i, :context_len] = torch.LongTensor([batch_data[i][-4]])
             context_mask_tensor[i, :context_len] = torch.LongTensor([1] * context_len)
 
-        return word_seq_tensor, intent_tensor, word_mask_tensor, context_seq_tensor, context_mask_tensor
+        return word_seq_tensor, intent_tensor, word_mask_tensor, word_token_type_ids, context_seq_tensor, context_mask_tensor
 
     def get_train_batch(self, batch_size):
         batch_data = random.choices(self.data['train'], k=batch_size)

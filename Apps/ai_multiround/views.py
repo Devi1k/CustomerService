@@ -1,5 +1,4 @@
 import os
-import os
 import time
 
 import numpy as np
@@ -11,13 +10,14 @@ from transformers import AutoTokenizer
 
 from Apps.ai_multiround.utils.logger import Logger, clean_log
 
+model_path = "/home/l/CustomerService/albert_chinese_base"
 log = Logger('multiround').getLogger()
-tokenizer = AutoTokenizer.from_pretrained("voidful/albert_chinese_base")
+tokenizer = AutoTokenizer.from_pretrained(model_path)
 mapper_list = ["true", "false"]
 model_name = "multiround.bin"
 log.info(ort.__version__)
 log.info(ort.get_device())
-sess = ort.InferenceSession(os.getcwd() + "/Apps/ai_multiround/model/0426multiround.onnx",
+sess = ort.InferenceSession(os.getcwd() + "/Apps/ai_multiround/model/multiround.onnx",
                             providers=['CUDAExecutionProvider'])
 
 def to_numpy(tensor):

@@ -12,7 +12,7 @@
     "finetune": true,
     "context": false,
     "context_grad": false,
-    "pretrained_weights": "hfl/chinese-bert-wwm-ext",
+    "pretrained_weights": "/home/l/CustomerService/chinese-bert-wwm-ext",
     "check_step": 100,
     "max_step": 1000,
     "batch_size": 16,
